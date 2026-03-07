@@ -1,30 +1,17 @@
-import { Navbar } from "@/components/Navbar"
-import { Hero } from "@/components/Hero"
-import { Schemes } from "@/components/Schemes"
-import { HowItWorks } from "@/components/HowItWorks"
-import { Payment } from "@/components/Payment"
-import { Help } from "@/components/Help"
-import { FAQ } from "@/components/FAQ"
-import { CTA } from "@/components/CTA"
-import { Footer } from "@/components/Footer"
-import { WhatsAppButton } from "@/components/WhatsAppButton"
+import { Routes, Route } from "react-router-dom"
+import { SignIn } from "@/pages/SignIn"
+import { SignUp } from "@/pages/SignUp"
+import { Dashboard } from "@/pages/Dashboard"
+import { Home } from "@/pages/Home"
 
 function App() {
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <main className="pt-[66px]">
-        <Hero />
-        <Schemes />
-        <HowItWorks />
-        <Payment />
-        <Help />
-        <FAQ />
-        <CTA />
-      </main>
-      <Footer />
-      <WhatsAppButton />
-    </div>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/sign-in" element={<SignIn />} />
+      <Route path="/sign-up" element={<SignUp />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+    </Routes>
   )
 }
 
