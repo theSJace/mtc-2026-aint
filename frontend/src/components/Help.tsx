@@ -8,7 +8,7 @@ export function Help() {
     },
     {
       icon: "👨‍👩‍👧",
-      title: "Family Can Register for You",
+      title: "Family Can Login / Register for You",
       description:
         "Your son, daughter, or any family member can register and set up monthly PayNow on your behalf.",
     },

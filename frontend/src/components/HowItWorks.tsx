@@ -5,7 +5,7 @@ export function HowItWorks() {
       icon: "📋",
       title: "Fill Your Details",
       description:
-        "Register using Singpass MyInfo (auto-fills your details) or fill in manually. Add dependants for Pintar Plus.",
+        "Login or register using SingPass MyInfo (auto-fills your details) or fill in manually. Add dependants for Pintar Plus.",
       time: "5 minutes",
       bgColor: "bg-green-pale",
       textColor: "text-green-deep",

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 
 export function CTA() {
@@ -12,9 +13,11 @@ export function CTA() {
           Alhamdulillah — may Allah SWT bless your wealth, protect your family, and accept this Sadaqah Jariyah from you.
         </p>
         <div className="flex flex-col sm:flex-row gap-3.5 justify-center">
+          <Link to="/sign-in">
           <Button variant="gold" size="lg">
-            ✦ Daftar Sekarang — Register Now
+            ✦ Daftar Sekarang — Login / Register
           </Button>
+        </Link>
           <Button variant="outline" size="lg">
             🕌 Help at Counter
           </Button>

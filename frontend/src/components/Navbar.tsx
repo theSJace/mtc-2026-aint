@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 
@@ -46,12 +47,12 @@ export function Navbar() {
         <a href="#help" className="text-sm font-medium text-text-mid hover:text-green-mid transition-colors">
           Need Help?
         </a>
-        <Button size="sm">Register Now →</Button>
+        <Link to="/sign-in"><Button size="sm">Login / Register →</Button></Link>
       </div>
 
       {/* Mobile Navigation */}
       <div className="flex md:hidden items-center gap-2">
-        <Button size="sm" className="text-xs">Register →</Button>
+        <Link to="/sign-in"><Button size="sm" className="text-xs">Login / Register →</Button></Link>
         <a
           href="https://wa.me/6598337752"
           target="_blank"

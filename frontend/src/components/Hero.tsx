@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 
 export function Hero() {
@@ -23,7 +24,7 @@ export function Hero() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 mb-9">
-              <Button>✦ Register Online</Button>
+              <Link to="/sign-in"><Button>✦ Login / Register</Button></Link>
               <Button variant="secondary">🕌 Help at Counter</Button>
             </div>
             
