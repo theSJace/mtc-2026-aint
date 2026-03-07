@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Skim Pintar — Masjid Ar-Raudhah</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --green-deep: #1a4a35;
+    --green-mid: #2d6a4f;
+    --green-soft: #52b788;
+    --green-pale: #d8f3dc;
+    --gold: #c9a84c;
+    --gold-light: #f0d98e;
+    --cream: #faf7f0;
+    --cream-dark: #f2ece0;
+    --brown-warm: #6b4c3b;
+    --text-dark: #1c2b20;
+    --text-mid: #3d5a45;
+    --text-light: #7a9a82;
+    --white: #ffffff;
+    --radius: 20px;
+    --radius-sm: 12px;
+    --shadow: 0 8px 40px rgba(26,74,53,0.10);
+    --shadow-card: 0 4px 24px rgba(26,74,53,0.08);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px;
+    background: rgba(250,247,240,0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(200,180,140,0.2);
+    transition: box-shadow 0.3s;
+  }
+  nav.scrolled { box-shadow: 0 2px 20px rgba(26,74,53,0.08); }
+  .nav-logo { display: flex; align-items: center; gap: 10px; }
+  .nav-logo-mark {
+    width: 38px; height: 38px;
+    border-radius: 8px; flex-shrink: 0;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav-logo-mark img {
+    width: 100%; height: 100%; object-fit: contain;
+  }
+  .nav-logo-text strong { display: block; font-family: 'Playfair Display', serif; font-size: 14px; color: var(--green-deep); line-height: 1.2; }
+  .nav-logo-text span { font-size: 11px; color: var(--text-light); }
+  .nav-desktop { display: flex; gap: 28px; align-items: center; }
+  .nav-desktop a { text-decoration: none; color: var(--text-mid); font-size: 14px; font-weight: 500; transition: color 0.2s; }
+  .nav-desktop a:hover { color: var(--green-mid); }
+  .nav-desktop .btn-nav { background: var(--green-deep); color: var(--white) !important; padding: 9px 20px; border-radius: 50px; }
+  .nav-desktop .btn-nav:hover { background: var(--green-mid); }
+  .nav-mobile { display: none; gap: 8px; align-items: center; }
+  .nmb-reg { background: var(--green-deep); color: var(--white); padding: 9px 16px; border-radius: 50px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+  .nmb-wa { background: #25D366; color: var(--white); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; text-decoration: none; flex-shrink: 0; }
+  @media (max-width: 768px) { .nav-desktop { display: none; } .nav-mobile { display: flex; } }
+
+  /* LAYOUT */
+  .page-wrap { padding-top: 66px; }
+  .inner { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+  section { padding: 64px 0; }
+  @media (max-width: 768px) { section { padding: 48px 0; } }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+  .title { font-family: 'Playfair Display', serif; font-size: clamp(26px, 4vw, 42px); line-height: 1.2; color: var(--green-deep); margin-bottom: 14px; }
+  .desc { font-size: 15px; line-height: 1.75; color: var(--text-mid); max-width: 540px; }
+
+  /* BUTTONS */
+  .btn-p { display: inline-flex; align-items: center; gap: 8px; background: var(--green-deep); color: var(--white); padding: 15px 28px; border-radius: 50px; font-size: 15px; font-weight: 600; text-decoration: none; transition: all 0.25s; box-shadow: 0 4px 20px rgba(26,74,53,0.25); }
+  .btn-p:hover { background: var(--green-mid); transform: translateY(-2px); }
+  .btn-s { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: var(--green-deep); padding: 15px 28px; border-radius: 50px; font-size: 15px; font-weight: 600; text-decoration: none; border: 2px solid var(--green-deep); transition: all 0.25s; }
+  .btn-s:hover { background: var(--green-pale); }
+  .btn-g { display: inline-flex; align-items: center; gap: 8px; background: var(--gold); color: var(--green-deep); padding: 17px 32px; border-radius: 50px; font-size: 16px; font-weight: 700; text-decoration: none; transition: all 0.25s; box-shadow: 0 4px 20px rgba(201,168,76,0.3); }
+  .btn-g:hover { background: var(--gold-light); transform: translateY(-2px); }
+  .btn-w { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: var(--white); padding: 17px 32px; border-radius: 50px; font-size: 16px; font-weight: 600; text-decoration: none; border: 2px solid rgba(255,255,255,0.35); transition: all 0.25s; }
+  .btn-w:hover { background: rgba(255,255,255,0.08); }
+  @media (max-width: 480px) {
+    .btn-p, .btn-s, .btn-g, .btn-w { width: 100%; justify-content: center; padding: 15px 20px; }
+  }
+
+  /* HERO */
+  .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; padding: 56px 24px 48px; max-width: 1160px; margin: 0 auto; }
+  .badge { display: inline-flex; align-items: center; gap: 8px; background: var(--green-pale); color: var(--green-mid); padding: 7px 14px; border-radius: 50px; font-size: 12px; font-weight: 600; margin-bottom: 20px; border: 1px solid rgba(82,183,136,0.3); }
+  .badge-dot { width: 7px; height: 7px; background: var(--green-soft); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:0.6} }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(34px, 4.5vw, 56px); line-height: 1.15; color: var(--green-deep); margin-bottom: 18px; }
+  .hero h1 em { font-style: normal; color: var(--gold); }
+  .hero-sub { font-size: 16px; line-height: 1.75; color: var(--text-mid); margin-bottom: 32px; }
+  .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 36px; }
+  .trust-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .trust-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-light); }
+  .trust-icon { width: 26px; height: 26px; background: var(--green-pale); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  /* card visual */
+  .hero-visual { display: flex; justify-content: center; align-items: center; }
+  .card-stack { position: relative; width: 100%; max-width: 370px; height: 410px; }
+  .cbg { position: absolute; border-radius: 24px; box-shadow: var(--shadow); }
+  .cbg1 { width: 88%; height: 92%; top: 8%; left: 8%; background: linear-gradient(145deg, var(--green-mid), var(--green-deep)); transform: rotate(5deg); }
+  .cbg2 { width: 90%; height: 94%; top: 4%; left: 4%; background: var(--gold-light); transform: rotate(2.5deg); opacity: 0.4; }
+  .card-main { position: absolute; top: 0; left: 0; width: 92%; height: 96%; background: var(--white); border-radius: 24px; box-shadow: var(--shadow); padding: 26px; display: flex; flex-direction: column; gap: 14px; }
+  .c-icon { width: 52px; height: 52px; background: var(--green-deep); border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 26px; }
+  .c-title { font-family: 'Playfair Display', serif; font-size: 19px; color: var(--green-deep); font-weight: 600; }
+  .c-sub { font-size: 11px; color: var(--text-light); }
+  .c-members { background: var(--green-pale); border-radius: 11px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; }
+  .c-members-lbl { font-size: 10px; color: var(--text-light); }
+  .c-members-num { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: var(--green-deep); }
+  .c-pills { display: flex; gap: 7px; }
+  .pill { flex: 1; padding: 8px 8px; border-radius: 8px; font-size: 10px; font-weight: 600; text-align: center; }
+  .pill-a { background: #d8f3dc; color: var(--green-mid); }
+  .pill-b { background: #fff8e7; color: #8a6500; }
+  .c-foot { display: flex; align-items: flex-start; gap: 9px; background: var(--cream); border-radius: 9px; padding: 11px; margin-top: auto; }
+  .c-foot-icon { font-size: 18px; flex-shrink: 0; }
+  .c-foot-text { font-size: 11px; color: var(--text-mid); line-height: 1.5; }
+  .c-foot-text strong { display: block; color: var(--green-deep); font-size: 12px; margin-bottom: 1px; }
+  .fbadge { position: absolute; background: var(--white); border-radius: 11px; padding: 9px 13px; box-shadow: 0 6px 24px rgba(26,74,53,0.15); font-size: 11px; font-weight: 600; animation: float 4s ease-in-out infinite; white-space: nowrap; }
+  .fb1 { right: -8px; top: 44px; color: var(--green-deep); animation-delay: 0s; }
+  .fb2 { left: -8px; bottom: 60px; color: var(--brown-warm); animation-delay: 1.5s; }
+  .fbadge span { display: block; font-weight: 400; color: var(--text-light); font-size: 10px; margin-top: 2px; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+  @media (max-width: 768px) {
+    .hero-grid { grid-template-columns: 1fr; padding: 40px 24px 36px; gap: 0; }
+    .hero-visual { display: none; }
+    .hero-ctas { flex-direction: column; }
+  }
+
+  /* SCHEMES */
+  .schemes-block { background: var(--green-deep); border-radius: 28px; padding: 56px 52px; display: grid; grid-template-columns: 1fr 1fr; gap: 52px; align-items: start; }
+  .schemes-block .tag { color: var(--gold-light); }
+  .schemes-block .title { color: var(--white); }
+  .schemes-block .desc { color: rgba(255,255,255,0.72); max-width: 380px; }
+  .quote { background: rgba(255,255,255,0.06); border-left: 3px solid var(--gold); border-radius: 0 10px 10px 0; padding: 16px 20px; margin-top: 24px; font-style: italic; color: rgba(255,255,255,0.78); font-size: 14px; line-height: 1.7; }
+  .s-cards { display: flex; flex-direction: column; gap: 16px; }
+  .s-card { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 22px; }
+  .s-card.gold-card { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.4); }
+  .s-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+  .s-name { font-family: 'Playfair Display', serif; font-size: 17px; color: var(--white); font-weight: 600; }
+  .s-price { font-size: 11px; font-weight: 700; background: var(--gold); color: var(--green-deep); padding: 4px 11px; border-radius: 50px; white-space: nowrap; }
+  .s-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .s-list li { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.5; }
+  .s-list li::before { content: '✦'; color: var(--gold-light); font-size: 9px; margin-top: 4px; flex-shrink: 0; }
+  @media (max-width: 860px) { .schemes-block { grid-template-columns: 1fr; padding: 36px 28px; gap: 32px; border-radius: 20px; } }
+  @media (max-width: 480px) { .schemes-block { padding: 28px 20px; border-radius: 16px; } }
+
+  /* HOW */
+  .how-section { background: var(--cream-dark); }
+  .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-top: 44px; position: relative; }
+  .steps::before { content: ''; position: absolute; top: 44px; left: calc(16.67% + 20px); right: calc(16.67% + 20px); height: 2px; background: repeating-linear-gradient(90deg,var(--green-soft) 0,var(--green-soft) 8px,transparent 8px,transparent 16px); pointer-events: none; }
+  .step { background: var(--white); border-radius: var(--radius); padding: 28px 22px; box-shadow: var(--shadow-card); text-align: center; transition: transform 0.25s; }
+  .step:hover { transform: translateY(-5px); }
+  .step-num { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; margin: 0 auto 14px; }
+  .sn1 { background: var(--green-pale); color: var(--green-deep); }
+  .sn2 { background: #fff8e7; color: #8a6500; }
+  .sn3 { background: #fce8e8; color: #8a2020; }
+  .step-ico { font-size: 24px; margin-bottom: 10px; }
+  .step-t { font-family: 'Playfair Display', serif; font-size: 16px; color: var(--green-deep); margin-bottom: 8px; }
+  .step-d { font-size: 13px; color: var(--text-mid); line-height: 1.7; }
+  .step-time { display: inline-block; margin-top: 12px; font-size: 11px; font-weight: 700; color: var(--green-soft); background: var(--green-pale); padding: 4px 11px; border-radius: 50px; }
+  @media (max-width: 768px) {
+    .steps { grid-template-columns: 1fr; gap: 14px; }
+    .steps::before { display: none; }
+    .step { padding: 20px 18px; text-align: left; display: flex; gap: 14px; align-items: flex-start; }
+    .step-num { margin: 0; width: 42px; height: 42px; font-size: 17px; flex-shrink: 0; }
+    .step-ico { display: none; }
+    .step-body { flex: 1; }
+    .step-t, .step-d, .step-time { text-align: left; }
+  }
+
+  /* PAYMENT */
+  .pay-section { background: var(--white); }
+  .pay-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; margin-top: 44px; align-items: start; }
+  .pay-card { border: 2px solid var(--green-pale); border-radius: var(--radius); padding: 26px; transition: all 0.25s; position: relative; }
+  .pay-card:hover { border-color: var(--green-soft); box-shadow: var(--shadow-card); }
+  .pay-card.rec { border-color: var(--gold); }
+  .rec-tag { position: absolute; top: -12px; left: 22px; background: var(--gold); color: var(--green-deep); padding: 3px 13px; border-radius: 50px; font-size: 11px; font-weight: 700; }
+  .pay-ico { font-size: 34px; margin-bottom: 10px; }
+  .pay-t { font-family: 'Playfair Display', serif; font-size: 19px; color: var(--green-deep); margin-bottom: 7px; }
+  .pay-d { font-size: 13px; color: var(--text-mid); line-height: 1.7; margin-bottom: 14px; }
+  .pay-steps { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .pay-steps li { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; color: var(--text-mid); }
+  .ps { width: 19px; height: 19px; flex-shrink: 0; background: var(--green-deep); color: var(--white); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; margin-top: 1px; }
+  .qr-box { background: var(--cream); border-radius: 12px; padding: 18px; text-align: center; margin-top: 18px; }
+  .qr-mock { width: 90px; height: 90px; background: var(--green-deep); border-radius: 9px; margin: 0 auto 9px; display: flex; align-items: center; justify-content: center; color: var(--white); font-size: 9px; font-weight: 600; position: relative; overflow: hidden; }
+  .qr-mock::before { content: ''; position: absolute; inset: 7px; background: repeating-conic-gradient(var(--white) 0% 25%,var(--green-deep) 0% 50%) 0 0/10px 10px; opacity: 0.18; }
+  .qr-lbl { font-size: 11px; color: var(--text-light); }
+  .qr-lbl strong { display: block; font-size: 12px; color: var(--green-deep); margin-bottom: 2px; }
+  .pay-right { display: flex; flex-direction: column; gap: 18px; }
+  @media (max-width: 860px) { .pay-grid { grid-template-columns: 1fr; } }
+
+  /* ELDERLY */
+  .eld-section { background: linear-gradient(135deg, var(--gold-light) 0%, var(--cream-dark) 100%); }
+  .eld-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 52px; align-items: start; }
+  .eld-grid .title { color: var(--brown-warm); }
+  .eld-feats { display: flex; flex-direction: column; gap: 14px; margin-top: 26px; }
+  .ef { display: flex; gap: 13px; align-items: flex-start; background: rgba(255,255,255,0.65); border-radius: 13px; padding: 15px 16px; }
+  .ef-ico { width: 38px; height: 38px; flex-shrink: 0; border-radius: 9px; background: var(--white); display: flex; align-items: center; justify-content: center; font-size: 17px; }
+  .ef strong { display: block; font-size: 13px; color: var(--brown-warm); margin-bottom: 3px; }
+  .ef p { font-size: 12px; color: var(--text-mid); line-height: 1.6; }
+  .eld-box { background: var(--white); border-radius: var(--radius); padding: 28px 24px; box-shadow: var(--shadow-card); text-align: center; }
+  .eb-t { font-family: 'Playfair Display', serif; font-size: 19px; color: var(--green-deep); margin-bottom: 5px; }
+  .eb-s { font-size: 12px; color: var(--text-light); margin-bottom: 22px; }
+  .cm { display: flex; align-items: center; gap: 13px; background: var(--cream); border-radius: 11px; padding: 13px 15px; margin-bottom: 11px; text-align: left; text-decoration: none; }
+  .cm-ico { width: 38px; height: 38px; flex-shrink: 0; background: var(--green-pale); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+  .cm strong { display: block; font-size: 13px; color: var(--green-deep); margin-bottom: 1px; }
+  .cm span { font-size: 12px; color: var(--text-mid); }
+  .hours { margin-top: 14px; font-size: 12px; color: var(--text-light); line-height: 1.8; }
+  .hours strong { color: var(--text-mid); }
+  @media (max-width: 860px) { .eld-grid { grid-template-columns: 1fr; gap: 28px; } }
+
+  /* FAQ */
+  .faq-section { background: var(--cream); }
+  .faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 40px; }
+  .faq-item { background: var(--white); border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--cream-dark); transition: box-shadow 0.2s; }
+  .faq-item:hover { box-shadow: var(--shadow-card); }
+  .faq-q { width: 100%; background: none; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 17px 19px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; color: var(--green-deep); text-align: left; gap: 10px; line-height: 1.4; }
+  .faq-chevron { flex-shrink: 0; width: 24px; height: 24px; background: var(--green-pale); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: transform 0.3s; }
+  .faq-item.open .faq-chevron { transform: rotate(180deg); }
+  .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s; padding: 0 19px; font-size: 13px; color: var(--text-mid); line-height: 1.8; }
+  .faq-item.open .faq-a { max-height: 300px; padding: 0 19px 17px; }
+  @media (max-width: 768px) { .faq-grid { grid-template-columns: 1fr; } }
+
+  /* CTA */
+  .cta-section { background: var(--green-deep); padding: 72px 24px; text-align: center; }
+  .cta-inner { max-width: 580px; margin: 0 auto; }
+  .cta-ico { font-size: 50px; margin-bottom: 18px; }
+  .cta-t { font-family: 'Playfair Display', serif; font-size: clamp(26px, 4vw, 38px); color: var(--white); margin-bottom: 13px; }
+  .cta-d { font-size: 15px; color: rgba(255,255,255,0.68); margin-bottom: 34px; line-height: 1.75; }
+  .cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .pdpa { display: inline-flex; align-items: center; gap: 6px; margin-top: 22px; font-size: 11px; color: rgba(255,255,255,0.38); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 7px 14px; }
+
+  /* FOOTER */
+  footer { background: var(--green-deep); border-top: 1px solid rgba(255,255,255,0.08); padding: 28px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; }
+  .f-left { color: rgba(255,255,255,0.48); font-size: 12px; line-height: 1.8; }
+  .f-left strong { color: rgba(255,255,255,0.78); display: block; }
+  .f-links { display: flex; gap: 18px; flex-wrap: wrap; }
+  .f-links a { color: rgba(255,255,255,0.48); text-decoration: none; font-size: 12px; }
+  .f-links a:hover { color: var(--gold-light); }
+  @media (max-width: 600px) { footer { flex-direction: column; text-align: center; } .f-links { justify-content: center; } }
+
+  /* STICKY WA */
+  .sticky-wa { position: fixed; bottom: 20px; right: 20px; z-index: 99; }
+  .sticky-wa a { display: flex; align-items: center; gap: 8px; background: #25D366; color: var(--white); padding: 12px 18px; border-radius: 50px; text-decoration: none; font-size: 13px; font-weight: 600; box-shadow: 0 4px 20px rgba(37,211,102,0.4); transition: all 0.25s; }
+  .sticky-wa a:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(37,211,102,0.5); }
+  @media (max-width: 480px) {
+    .sticky-wa { bottom: 14px; right: 14px; }
+    .sticky-wa .wa-lbl { display: none; }
+    .sticky-wa a { padding: 13px; border-radius: 50%; }
+  }
+
+  /* REVEAL */
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.55s ease, transform 0.55s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-logo">
+    <div class="nav-logo-mark"><img src="data:image/webp;base64,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" alt="Masjid Ar-Raudhah" /></div>
+    <div class="nav-logo-text">
+      <strong>Skim Pintar</strong>
+      <span>Masjid Ar-Raudhah</span>
+    </div>
+  </div>
+  <div class="nav-desktop">
+    <a href="#how">How It Works</a>
+    <a href="#schemes">Schemes</a>
+    <a href="#payment">Payment</a>
+    <a href="#help">Need Help?</a>
+    <a href="#register" class="btn-nav">Daftar Sekarang →</a>
+  </div>
+  <div class="nav-mobile">
+    <a href="#register" class="nmb-reg">Register →</a>
+    <a href="https://wa.me/6598337752" class="nmb-wa" target="_blank">💬</a>
+  </div>
+</nav>
+
+<div class="page-wrap">
+
+<!-- HERO -->
+<section style="background:var(--cream); padding:0">
+  <div class="hero-grid">
+    <div>
+      <div class="badge"><div class="badge-dot"></div>Penderma Tetap Ar-Raudhah · 18 Years of Community Care</div>
+      <h1 class="hero">Jaga Diri,<br/>Jaga Keluarga,<br/>Jaga <em>Komuniti</em></h1>
+      <p class="hero-sub">Skim Pintar is Masjid Ar-Raudhah's community donation scheme. With a monthly contribution as low as $5, you and your family receive full urusan jenazah (funeral) services — powered by the spirit of <em>gotong royong</em>.</p>
+      <div class="hero-ctas">
+        <a href="#register" class="btn-p">✦ Register Online</a>
+        <a href="#help" class="btn-s">🕌 Help at Counter</a>
+      </div>
+      <div class="trust-row">
+        <div class="trust-item"><div class="trust-icon">🔒</div>PDPA Protected</div>
+        <div class="trust-item"><div class="trust-icon">✅</div>Shariah-compliant</div>
+        <div class="trust-item"><div class="trust-icon">⚡</div>Active in &lt;24hrs</div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="card-stack">
+        <div class="cbg cbg1"></div>
+        <div class="cbg cbg2"></div>
+        <div class="card-main">
+          <div class="c-icon">🕌</div>
+          <div><div class="c-title">Skim Pintar</div><div class="c-sub">Masjid Ar-Raudhah — Active Members</div></div>
+          <div class="c-members">
+            <div><div class="c-members-lbl">Community Members</div><div class="c-members-num">1,240+</div></div>
+            <span style="font-size:30px">🌙</span>
+          </div>
+          <div class="c-pills">
+            <div class="pill pill-a">✦ Coverage Active</div>
+            <div class="pill pill-b">⚡ Instant Setup</div>
+          </div>
+          <div class="c-foot">
+            <div class="c-foot-icon">🤲</div>
+            <div class="c-foot-text"><strong>Sadaqah Jariyah</strong>Monthly donation to mosque building fund — continuous charity for all.</div>
+          </div>
+        </div>
+        <div class="fbadge fb1">🕌 Urusan Jenazah<span>Covered for you &amp; family</span></div>
+        <div class="fbadge fb2">⚡ No more 30-day wait<span>PayNow = instant activation</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SCHEMES -->
+<section id="schemes">
+  <div class="inner">
+    <div class="schemes-block reveal">
+      <div>
+        <div class="tag">What is Skim Pintar?</div>
+        <h2 class="title">More than a donation.<br/>A promise to your family.</h2>
+        <p class="desc">As a regular donor to Masjid Ar-Raudhah's building fund, the mosque provides full urusan jenazah services for you and your loved ones — free of charge. Community gotong royong, not insurance.</p>
+        <div class="quote">"This is Sadaqah Jariyah — continuous charity. Your contribution, however small, keeps the mosque running and the community cared for."</div>
+      </div>
+      <div class="s-cards">
+        <div class="s-card">
+          <div class="s-head"><div class="s-name">Skim Pintar</div><div class="s-price">$5 / month</div></div>
+          <ul class="s-list">
+            <li>Free urusan jenazah (ritual bathing, shrouding, burial, transport)</li>
+            <li>20% discount on Masjid Ar-Raudhah religious courses</li>
+            <li>Immediate activation upon first payment</li>
+          </ul>
+        </div>
+        <div class="s-card gold-card">
+          <div class="s-head"><div class="s-name">Skim Pintar Plus</div><div class="s-price">$20+ / month</div></div>
+          <ul class="s-list">
+            <li>All Pintar benefits for you, plus family members at same address</li>
+            <li>50% course discount for parents &amp; in-laws</li>
+            <li>Cover up to 10 dependants (spouse, children, parents, in-laws, siblings)</li>
+            <li>Donate more — $30, $50, or any amount above $20</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="how-section">
+  <div class="inner">
+    <div class="reveal">
+      <div class="tag">The New Process</div>
+      <h2 class="title">From 30 days to under 24 hours</h2>
+      <p class="desc">We've replaced the paper GIRO process with a simple digital flow. No queues, no waiting weeks for bank approval.</p>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-num sn1">1</div>
+        <div class="step-body">
+          <div class="step-ico">📋</div>
+          <div class="step-t">Fill Your Details</div>
+          <p class="step-d">Register using Singpass MyInfo (auto-fills your details) or fill in manually. Add dependants for Pintar Plus.</p>
+          <div class="step-time">⏱ 5 minutes</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num sn2">2</div>
+        <div class="step-body">
+          <div class="step-ico">📱</div>
+          <div class="step-t">Make Your First Donation</div>
+          <p class="step-d">Scan the personalised PayNow QR code or set up a monthly standing instruction in your banking app.</p>
+          <div class="step-time">⏱ 2 minutes</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num sn3">3</div>
+        <div class="step-body">
+          <div class="step-ico">✅</div>
+          <div class="step-t">You're Active!</div>
+          <p class="step-d">Instant WhatsApp confirmation. Track your status, payments, and dependants from your member dashboard.</p>
+          <div class="step-time">⏱ Instant</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PAYMENT -->
+<section id="payment" class="pay-section">
+  <div class="inner">
+    <div class="reveal">
+      <div class="tag">Payment Methods</div>
+      <h2 class="title">Simple, familiar, and interest-free</h2>
+      <p class="desc">Choose what works for you. All options are riba-free and MAS-compliant.</p>
+    </div>
+    <div class="pay-grid reveal">
+      <div class="pay-card rec">
+        <div class="rec-tag">✦ Recommended</div>
+        <div class="pay-ico">📲</div>
+        <div class="pay-t">PayNow</div>
+        <p class="pay-d">Scan a personalised QR monthly, or set up a standing instruction once and never think about it again. Instant — no bank delays.</p>
+        <ul class="pay-steps">
+          <li><div class="ps">1</div>We generate your unique PayNow QR (Ref: SPTAR-XXXX)</li>
+          <li><div class="ps">2</div>Scan with any SG banking app (DBS, OCBC, UOB, POSB…)</li>
+          <li><div class="ps">3</div>Payment received instantly with your reference tagged</li>
+          <li><div class="ps">4</div>Or: set up monthly standing instruction once — done!</li>
+        </ul>
+        <div class="qr-box">
+          <div class="qr-mock">PayNow</div>
+          <div class="qr-lbl"><strong>Your Personalised QR Code</strong>Generated after registration · Ref: SPTAR-XXXX</div>
+        </div>
+      </div>
+      <div class="pay-right">
+        <div class="pay-card">
+          <div class="pay-ico">🏦</div>
+          <div class="pay-t">Bank Standing Instruction</div>
+          <p class="pay-d">Set up automatic monthly PayNow transfers in your own banking app. Cancel anytime.</p>
+          <ul class="pay-steps">
+            <li><div class="ps">1</div>Open your banking app (DBS/POSB, OCBC, UOB)</li>
+            <li><div class="ps">2</div>Add Masjid Ar-Raudhah's PayNow UEN as a favourite</li>
+            <li><div class="ps">3</div>Set recurring monthly transfer with your SPTAR reference</li>
+          </ul>
+        </div>
+        <div class="pay-card">
+          <div class="pay-ico">💵</div>
+          <div class="pay-t">Cash at Counter</div>
+          <p class="pay-d">Prefer to pay in person? Walk in during opening hours — staff record your payment immediately.</p>
+          <ul class="pay-steps">
+            <li><div class="ps">1</div>Visit mosque counter during opening hours</li>
+            <li><div class="ps">2</div>Quote your membership number (SPTAR-XXXX)</li>
+            <li><div class="ps">3</div>Receive official receipt and instant status update</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ELDERLY / HELP -->
+<section id="help" class="eld-section">
+  <div class="inner">
+    <div class="eld-grid reveal">
+      <div>
+        <div class="tag">Not sure how to start?</div>
+        <h2 class="title">We'll sit with you<br/>and do it together.</h2>
+        <p class="desc">Our mosque staff are trained to help every jemaah — no matter your age or comfort with technology. Come as you are.</p>
+        <div class="eld-feats">
+          <div class="ef"><div class="ef-ico">🧓</div><div><strong>Assisted Registration at Counter</strong><p>Staff will guide you through registration on a tablet. With Singpass, your details auto-fill in seconds.</p></div></div>
+          <div class="ef"><div class="ef-ico">👨‍👩‍👧</div><div><strong>Family Can Register for You</strong><p>Your son, daughter, or any family member can register and set up monthly PayNow on your behalf.</p></div></div>
+          <div class="ef"><div class="ef-ico">📞</div><div><strong>WhatsApp Us First</strong><p>Not sure what to bring? WhatsApp us and we'll tell you exactly what you need. We speak Malay and English.</p></div></div>
+        </div>
+      </div>
+      <div class="eld-box">
+        <div class="eb-t">Hubungi Kami</div>
+        <div class="eb-s">We're here to help. No question is too small.</div>
+        <a href="https://wa.me/6598337752" class="cm" target="_blank"><div class="cm-ico">💬</div><div><strong>WhatsApp</strong><span>9833 7752 — fastest response</span></div></a>
+        <a href="mailto:arraudhahfin@arraudhah.mosque.sg" class="cm"><div class="cm-ico">📧</div><div><strong>Email</strong><span>arraudhahfin@arraudhah.mosque.sg</span></div></a>
+        <div class="cm"><div class="cm-ico">🕌</div><div><strong>Visit Us</strong><span>30 Bukit Batok East Ave 2, S659919</span></div></div>
+        <div class="hours"><strong>Counter Hours</strong><br/>Mon – Fri: 9am – 5pm<br/>Saturday: 9am – 1pm<br/>Closed on Public Holidays</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="inner">
+    <div class="reveal"><div class="tag">Common Questions</div><h2 class="title">Soalan Lazim</h2></div>
+    <div class="faq-grid reveal">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Is this insurance? Is it Shariah-compliant?<div class="faq-chevron">▾</div></button>
+        <div class="faq-a">Skim Pintar is a <strong>donation (sadaqah)</strong> to the mosque's building fund — not insurance. There is no akad bay'. The mosque provides urusan jenazah as a courtesy to regular donors. Fully Shariah-compliant, operating for 18 years.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">What happens if I miss a payment?<div class="faq-chevron">▾</div></button>
+        <div class="faq-a">You'll receive a WhatsApp reminder if a payment is missed. You have a grace period before coverage is paused. After 3 consecutive missed payments, coverage is suspended — but you'll receive multiple warnings first. No more silent cancellations.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">How quickly does coverage start?<div class="faq-chevron">▾</div></button>
+        <div class="faq-a">Coverage activates <strong>immediately upon your first successful PayNow payment</strong> — usually within minutes. Previously, GIRO took 21–30 working days. The new system eliminates that wait entirely.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Who can I add as a dependant for Pintar Plus?<div class="faq-chevron">▾</div></button>
+        <div class="faq-a">You may add spouse, children, siblings, parents and in-laws. Same-address family (Section A) and those at different addresses (Section B, up to 10 entries). You'll need their full name (per NRIC) and date of birth.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Can I pay more than the minimum?<div class="faq-chevron">▾</div></button>
+        <div class="faq-a">Yes. The minimum for Pintar Plus is $20/month, but you're welcome to donate $30, $50, or any amount. Any amount above the minimum is additional sadaqah to the mosque fund. Benefits remain the same.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Is my data safe? What about PDPA?<div class="faq-chevron">▾</div></button>
+        <div class="faq-a">Your personal data is protected under Singapore's PDPA. Lembaga Pentadbir Masjid Ar-Raudhah is the data controller. Data is used solely for membership administration. You may request access or correction at any time.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section id="register" class="cta-section">
+  <div class="cta-inner reveal">
+    <div class="cta-ico">🤲</div>
+    <h2 class="cta-t">Ready to join the community?</h2>
+    <p class="cta-d">Alhamdulillah — may Allah SWT bless your wealth, protect your family, and accept this Sadaqah Jariyah from you.</p>
+    <div class="cta-btns">
+      <a href="#" class="btn-g">✦ Daftar Sekarang — Register Now</a>
+      <a href="#help" class="btn-w">🕌 Help at Counter</a>
+    </div>
+    <div class="pdpa">🔒 PDPA Protected · Official LPM Ar-Raudhah Portal</div>
+  </div>
+</section>
+
+<footer>
+  <div class="f-left"><strong>Lembaga Pentadbir Masjid Ar-Raudhah</strong>30 Bukit Batok East Ave 2, Singapore 659919 · Tel: 6899 5840</div>
+  <div class="f-links"><a href="#">Privacy Policy</a><a href="#">PDPA Notice</a><a href="#">Contact</a><a href="#">Admin Login</a></div>
+</footer>
+
+</div>
+
+<div class="sticky-wa">
+  <a href="https://wa.me/6598337752" target="_blank"><span>💬</span><span class="wa-lbl">WhatsApp Us</span></a>
+</div>
+
+<script>
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 10), { passive: true });
+
+  function toggleFaq(btn) {
+    const item = btn.closest('.faq-item');
+    const open = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+    if (!open) item.classList.add('open');
+  }
+
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) { setTimeout(() => e.target.classList.add('visible'), i * 60); obs.unobserve(e.target); }
+    });
+  }, { threshold: 0.07 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

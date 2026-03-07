@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  --font-playfair: "Playfair Display", serif;
+  --font-dm-sans: "DM Sans", sans-serif;
+
+  --color-green-deep: #1a4a35;
+  --color-green-mid: #2d6a4f;
+  --color-green-soft: #52b788;
+  --color-green-pale: #d8f3dc;
+  --color-gold: #c9a84c;
+  --color-gold-light: #f0d98e;
+  --color-cream: #faf7f0;
+  --color-cream-dark: #f2ece0;
+  --color-brown-warm: #6b4c3b;
+  --color-text-dark: #1c2b20;
+  --color-text-mid: #3d5a45;
+  --color-text-light: #7a9a82;
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: "DM Sans", sans-serif;
+    background-color: var(--color-cream);
+    color: var(--color-text-dark);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+}
+
+@layer utilities {
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-7px);
+    }
+  }
+
+  @keyframes float-delayed {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-7px);
+    }
+  }
+
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: float-delayed 4s ease-in-out infinite;
+    animation-delay: 1.5s;
+  }
+}
