@@ -1,8 +1,10 @@
-import { useState } from "react"
-import { useSearchParams, Link } from "react-router-dom"
-import { ArrowLeft } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useSearchParams, useLocation, Link } from "react-router-dom"
+import type { SingpassPrefill } from "@/lib/singpass"
+import { ArrowLeft, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SingpassButton } from "@/components/SingpassButton"
+import { SingpassScanAndConfirm } from "@/components/SingpassScanAndConfirm"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -45,7 +47,10 @@ function newDependant(): Dependant {
 
 export function SignUp() {
   const [searchParams] = useSearchParams()
-  const fromSingPass = searchParams.get("from") === "singpass"
+  const location = useLocation()
+  const locationState = location.state as { fromSingpass?: boolean; singpassPrefill?: SingpassPrefill } | null
+  const fromSingPass = searchParams.get("from") === "singpass" || locationState?.fromSingpass === true
+  const initialPrefill = locationState?.singpassPrefill
 
   const [fullName, setFullName] = useState("")
   const [icNumber, setIcNumber] = useState("")
@@ -56,6 +61,22 @@ export function SignUp() {
   const [email, setEmail] = useState("")
   const [dependants, setDependants] = useState<Dependant[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [singpassFlowOpen, setSingpassFlowOpen] = useState(false)
+  /** When true, personal info fields were pre-filled from SingPass and are disabled */
+  const [prefilledBySingpass, setPrefilledBySingpass] = useState(false)
+
+  useEffect(() => {
+    if (initialPrefill) {
+      setFullName(initialPrefill.fullName ?? "")
+      setIcNumber(initialPrefill.icNumber ?? "")
+      setDateOfBirth(initialPrefill.dateOfBirth ?? "")
+      setHomeAddress(initialPrefill.homeAddress ?? "")
+      setPostalCode(initialPrefill.postalCode ?? "")
+      setContactNumber(initialPrefill.contactNumber ?? "")
+      setEmail(initialPrefill.email ?? "")
+      setPrefilledBySingpass(true)
+    }
+  }, [initialPrefill])
 
   const addDependant = () => {
     setDependants((prev) => [...prev, newDependant()])
@@ -84,7 +105,18 @@ export function SignUp() {
   }
 
   const handleRetrieveSingPass = () => {
-    // TODO: open SingPass/MyInfo flow and pre-fill fullName, icNumber, dateOfBirth, homeAddress, postalCode, contactNumber
+    setSingpassFlowOpen(true)
+  }
+
+  const handleSingpassConfirm = (prefill: SingpassPrefill) => {
+    setFullName(prefill.fullName ?? "")
+    setIcNumber(prefill.icNumber ?? "")
+    setDateOfBirth(prefill.dateOfBirth ?? "")
+    setHomeAddress(prefill.homeAddress ?? "")
+    setPostalCode(prefill.postalCode ?? "")
+    setContactNumber(prefill.contactNumber ?? "")
+    setEmail(prefill.email ?? "")
+    setPrefilledBySingpass(true)
   }
 
   return (
@@ -97,18 +129,12 @@ export function SignUp() {
           <ArrowLeft className="w-4 h-4" />
           Back to sign in
         </Link>
-        <h1 className="text-2xl md:text-3xl font-medium text-green-deep">
-          Create your account
-        </h1>
-        <p className="text-sm text-text-mid">
-          Enter your details. Auto-fill from SingPass if you signed in with it.
-        </p>
       </div>
 
       <Card className="w-full max-w-[560px] mt-6 rounded-xl border border-gold/20 shadow-lg shadow-green-deep/10">
         <CardHeader className="pb-2">
           <CardTitle className="text-xl font-medium text-green-deep">
-            Sign up
+            Create an Account
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-8">
@@ -127,12 +153,18 @@ export function SignUp() {
                 Personal information
               </h2>
               <SingpassButton
-                variant="link"
                 onClick={handleRetrieveSingPass}
-                className="text-left"
               >
                 Auto-fill from Singpass
               </SingpassButton>
+
+              <SingpassScanAndConfirm
+                open={singpassFlowOpen}
+                onClose={() => setSingpassFlowOpen(false)}
+                onConfirm={handleSingpassConfirm}
+                title="Auto-fill from Singpass"
+                asModal
+              />
 
               {[
                 { id: "fullName", label: "Full Name *", value: fullName, set: setFullName, type: "text" as const },
@@ -151,7 +183,7 @@ export function SignUp() {
                     value={value}
                     onChange={(e) => set(e.target.value)}
                     required
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || prefilledBySingpass}
                   />
                 </div>
               ))}
@@ -269,11 +301,12 @@ export function SignUp() {
               )}
               <Button
                 type="button"
-                variant="ghost"
-                className="w-fit text-green-deep font-medium hover:bg-green-pale -ml-1"
+                variant="secondary"
+                className="w-full sm:w-auto gap-2 rounded-lg font-medium border-2 border-green-deep bg-green-pale text-green-deep hover:bg-green-soft hover:border-green-mid"
                 onClick={addDependant}
                 disabled={isSubmitting}
               >
+                <Plus className="w-4 h-4 shrink-0" />
                 Add dependant
               </Button>
             </section>
@@ -283,7 +316,7 @@ export function SignUp() {
               className="w-full h-12 rounded-lg font-semibold"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Signing up…" : "Sign up"}
+              {isSubmitting ? "Creating account…" : "Create an Account"}
             </Button>
           </form>
         </CardContent>
