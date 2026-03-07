@@ -1,418 +1,146 @@
-# Streamlined Onboarding System
-
-## Overview
-
-A web application designed to streamline the onboarding process for Ar-Raudhah mosque, replacing traditional paper-based registration with a digital solution. The system is specifically designed to be accessible to the Malay-speaking elderly community.
+# Skim Pintar — Masjid Ar-Raudhah Digital Onboarding
+**Mosque Tech Challenge 2026 · Team Ar-Raudhah Innovators**
 
 ---
 
-## Problem Statement
+## Architecture
 
-### Current State
-- Onboarding is done via paper forms
-- Process takes a long time to complete
-- Target users may include elderly individuals who can only speak Malay (Ar-Raudhah is a Malay-centric mosque)
+```
+mtc-2026-aint/
+├── frontend/          ← React + Vite + TypeScript + Tailwind v4
+├── backend/           ← Python FastAPI
+└── convex/            ← Convex DB schema + mutations + queries
+```
 
-### Desired State
-- Streamlined digital onboarding process via Web App
-- All registration needs completed in one platform
-- Integration with SingPass/MyInfo for authentication and data retrieval
+| Layer | Tech |
+|---|---|
+| Frontend | React 19, Vite 8, TypeScript, Tailwind CSS v4 |
+| Backend | Python FastAPI, Pydantic v2, PyJWT, bcrypt |
+| Database | Convex DB (schema + mutations + queries provided) |
+| Auth | JWT Bearer tokens, SingPass/MyInfo mock integration |
+| i18n | English + Bahasa Melayu (built-in, no extra library) |
 
 ---
 
-## Features
+## Quick Start
 
-### Authentication System
+### 1. Backend
 
-#### Sign-In
-- Email and password authentication
-- Redirect to Sign-Up if no account exists
+```bash
+cd backend
+cp .env.example .env        # Edit JWT_SECRET and MOSQUE_PAYNOW_UEN
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+```
 
-#### Sign-Up
-- Form-based registration with SingPass/MyInfo integration
-- Automatic data retrieval to minimize manual input
-- Email verification required
+API docs: http://localhost:8000/docs
 
-### User Registration Form
+### 2. Convex (Database)
 
-#### Primary User Information
-| Field | Source |
-|-------|--------|
-| Full Name | SingPass/MyInfo |
-| NRIC | SingPass/MyInfo |
-| Date of Birth | SingPass/MyInfo |
-| Email | Manual Input |
-| Password | Manual Input |
-| Phone Number | SingPass/MyInfo |
-| Address | SingPass/MyInfo |
+```bash
+# From project root
+npm install
+npx convex dev              # Deploys schema + functions, generates types
+```
 
-#### Dependents Information
-For each dependent, the following information is required:
-- Full Name
-- Date of Birth
-- Relationship to Primary User
+### 3. Frontend
 
-#### Membership Status
-
-| Status | Description | Next Steps |
-|--------|-------------|------------|
-| **Not Registered** | New user without membership | No GIRO/PayNow required |
-| **Pintar** | Basic membership tier | Redirect to PayNow/GIRO registration |
-| **Pintar Plus** | Premium membership tier | Redirect to PayNow/GIRO registration |
+```bash
+cd frontend
+cp .env.example .env        # VITE_API_URL=http://localhost:8000
+npm install
+npm run dev                 # http://localhost:5173
+```
 
 ---
 
 ## User Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         START                                   │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    SIGN IN PAGE                                 │
-│                  (Email + Password)                             │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                    ┌─────────┴─────────┐
-                    │                   │
-              Account Exists      No Account Found
-                    │                   │
-                    ▼                   ▼
-┌──────────────────────────┐   ┌─────────────────────────────────┐
-│    DASHBOARD/HOME        │   │        SIGN UP PAGE             │
-└──────────────────────────┘   │  ┌───────────────────────────┐  │
-                               │  │ SingPass/MyInfo Button    │  │
-                               │  └───────────────────────────┘  │
-                               │              │                  │
-                               │              ▼                  │
-                               │  ┌───────────────────────────┐  │
-                               │  │ Auto-fill Form Data      │  │
-                               │  │ - Full Name              │  │
-                               │  │ - NRIC                   │  │
-                               │  │ - DOB                    │  │
-                               │  │ - Address                │  │
-                               │  └───────────────────────────┘  │
-                               │              │                  │
-                               │              ▼                  │
-                               │  ┌───────────────────────────┐  │
-                               │  │ Manual Input              │  │
-                               │  │ - Email                   │  │
-                               │  │ - Password                │  │
-                               │  │ - Dependents Info         │  │
-                               │  └───────────────────────────┘  │
-                               └─────────────────────────────────┘
-                                              │
-                                              ▼
-                               ┌─────────────────────────────────┐
-                               │      EMAIL VERIFICATION        │
-                               └─────────────────────────────────┘
-                                              │
-                                              ▼
-                               ┌─────────────────────────────────┐
-                               │     MEMBERSHIP STATUS CHECK    │
-                               └─────────────────────────────────┘
-                                              │
-                         ┌────────────────────┼────────────────────┐
-                         │                    │                    │
-                   Not Registered        Pintar            Pintar Plus
-                         │                    │                    │
-                         ▼                    ▼                    ▼
-               ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-               │ COMPLETE REGIS- │  │ PAYNOW/GIRO    │  │ PAYNOW/GIRO    │
-               │ TRATION         │  │ REGISTRATION   │  │ REGISTRATION   │
-               └─────────────────┘  └─────────────────┘  └─────────────────┘
-                         │                    │                    │
-                         └────────────────────┼────────────────────┘
-                                              │
-                                              ▼
-                               ┌─────────────────────────────────┐
-                               │         DASHBOARD               │
-                               └─────────────────────────────────┘
+/ (Landing)
+ └─► /sign-in    ← email+password  OR  SingPass QR
+      ├── existing user → /dashboard
+      └── new user ──► /sign-up  (SingPass pre-fill + dependants)
+                         └──► /select-tier   (Pintar $5 / Pintar Plus $20)
+                               └──► /payment-setup  (PayNow QR or GIRO)
+                                     └──► /dashboard  (full member)
 ```
 
 ---
 
-## Dependent Management
+## Features Implemented
 
-### Questions to Resolve
+### ✅ FastAPI Backend (`/backend`)
+- `POST /api/auth/register` — NRIC + email uniqueness check, bcrypt password, JWT
+- `POST /api/auth/login` — email/password auth
+- `GET  /api/auth/me` — JWT-protected profile
+- `GET/POST/PUT/DELETE /api/dependents` — full CRUD with duplicate NRIC detection
+- `POST /api/membership/select-tier` — Pintar / Pintar Plus
+- `POST /api/payments/paynow` — generates PayNow QR payload + reference
+- `POST /api/payments/giro` — GIRO mandate submission
+- `POST /api/payments/:id/confirm` — payment confirmation
+- `GET  /api/payments` — payment history
 
-1. **Can dependents sign in using the primary account?**
-   - If yes: How is authorization handled?
-   - If no: Dependents must create their own accounts
+### ✅ Convex DB (`/convex`)
+- Full schema: `users`, `dependents`, `payments` tables with indexes
+- `users.ts` — queries + mutations (create, getByNric, getByEmail, updateMembership)
+- `dependents.ts` — queries + mutations (list, add, update, remove, getByNric)
+- `payments.ts` — queries + mutations (createPayNow, createGiro, markCompleted)
 
-2. **What permissions do dependents have?**
-   - View-only access?
-   - Limited functionality?
+### ✅ User Dashboard (`/dashboard`)
+- **Overview tab** — membership card, quick stats, quick actions
+- **Family tab** — add/edit/remove dependants with inline modal
+- **Payments tab** — full payment history table
+- **Profile tab** — personal details + language preference
 
-### Authorization Model (Proposed)
+### ✅ Smart Dependent Management
+- Duplicate NRIC detection at registration (server + frontend error messages)
+- Add/edit/remove dependants post-registration from Dashboard
+- Per-dependant address (same or different from primary)
+- Optional NRIC capture for dependants
+- Relationship types: Spouse, Parents, In-laws, Children, Sibling
 
+### ✅ Seamless Payment Handoff
+- **PayNow**: live QR code generated from PayNow spec payload (UEN + reference + amount)
+- **GIRO**: e-mandate form → mandate reference + 3–5 day processing message
+- Tier amounts hardcoded: Pintar = $5/month, Pintar Plus = $20/month
+- Payment confirmation flow with success screen
+- Payment history in Dashboard
+
+### ✅ Multi-Language (English + Bahasa Melayu)
+- All UI text in `src/lib/i18n.ts` (zero runtime dependency)
+- `LanguageProvider` + `useLanguage()` hook for global state
+- `LanguageToggle` component in Navbar + Dashboard Profile tab
+- Language persisted to `localStorage` + synced to backend
+- Full translations for: navigation, sign-in, sign-up, tier selection, payment, dashboard
+
+---
+
+## Environment Variables
+
+### Backend `.env`
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    PRIMARY ACCOUNT                              │
-│  - Full access to all features                                  │
-│  - Can manage dependents                                        │
-│  - Can update payment methods                                   │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              │ Manages
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    DEPENDENT ACCOUNT                            │
-│  Option A: Shared Access                                        │
-│  - Log in using primary account credentials                     │
-│  - Limited view of own information                              │
-│                                                                 │
-│  Option B: Linked Account                                       │
-│  - Separate login credentials                                   │
-│  - Linked to primary account for verification                   │
-└─────────────────────────────────────────────────────────────────┘
+JWT_SECRET=change-this-to-a-long-random-secret
+MOSQUE_PAYNOW_UEN=T08CC4132K
+CONVEX_URL=https://your-deployment.convex.cloud
+```
+
+### Frontend `.env`
+```
+VITE_API_URL=http://localhost:8000
 ```
 
 ---
 
-## Edge Cases
-
-### 1. Overlapping Dependent Registration
-
-**Scenario:** A dependent who is already registered under a primary account attempts to sign up with their own ID.
-
-**Proposed Solutions:**
-- Check for existing NRIC in the database
-- If found:
-  - Prompt user that they are already registered as a dependent
-  - Option to create their own primary account (will remove dependent status)
-  - Option to request access from primary account holder
-- Implement conflict resolution workflow
-
-### 2. Initial Membership Status
-
-**Question:** What should be the initial status for everyone signing up?
-
-**Proposed Logic:**
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                 NEW SIGN-UP STATUS FLOW                         │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │ Check MyInfo    │
-                    │ for existing    │
-                    │ membership      │
-                    └─────────────────┘
-                              │
-                    ┌─────────┴─────────┐
-                    │                   │
-              Found in System      Not Found
-                    │                   │
-                    ▼                   ▼
-           ┌────────────────┐   ┌────────────────┐
-           │ Retrieve       │   │ Default Status:│
-           │ Existing       │   │ "Not           │
-           │ Status         │   │ Registered"    │
-           │ (Pintar/Plus)  │   └────────────────┘
-           └────────────────┘
-                    │
-                    ▼
-           ┌────────────────┐
-           │ Prompt for     │
-           │ Payment Method │
-           │ (GIRO/PayNow)  │
-           └────────────────┘
-```
-
-### 3. Multiple Dependent Handling
-
-**Scenario:** Primary account holder adds multiple dependents.
-
-**Considerations:**
-- Maximum number of dependents per account?
-- Age restrictions for dependents?
-- Automatic conversion to primary account when dependent turns 18?
+## Production Notes
+- Replace in-memory `_users`, `_dependents`, `_payments` dicts in `backend/main.py` with Convex HTTP calls using the provided Convex functions
+- Replace SingPass mock in `frontend/src/lib/singpass.ts` with real MyInfo/SingPass NDI integration
+- Replace PayNow QR generation with certified PayNow SDK from your bank/payment provider
+- Add email verification flow (backend `/api/auth/verify-email` endpoint stub ready)
+- Add HTTPS + proper CORS origins for production deployment
 
 ---
 
-## Technical Considerations
-
-### Authentication
-- **Primary:** SingPass/MyInfo integration
-- **Fallback:** Email + Password
-- **Security:** 
-  - Email verification required
-  - Password strength requirements
-  - Two-factor authentication (optional)
-
-### Data Privacy
-- PDPA compliance (Singapore Personal Data Protection Act)
-- Consent for data collection
-- Data retention policies
-
-### Language Support
-- Primary: Malay
-- Secondary: English
-- Consider RTL layout if needed
-
-### Accessibility
-- Large fonts for elderly users
-- Simple navigation
-- Voice assistance (optional)
-- High contrast mode
-
----
-
-## Technology Stack (Proposed)
-
-| Layer | Technology Options |
-|-------|-------------------|
-| Frontend | React.js / Vue.js / Next.js |
-| Backend | Node.js / Python / Go |
-| Database | PostgreSQL / MySQL |
-| Authentication | SingPass/MyInfo API, OAuth 2.0 |
-| Payment | PayNow API, GIRO integration |
-| Hosting | AWS / Azure / Google Cloud |
-
----
-
-## API Endpoints (Proposed)
-
-### Authentication
-```
-POST /api/auth/signup          # Create new account
-POST /api/auth/signin          # Sign in to existing account
-POST /api/auth/verify-email    # Verify email address
-POST /api/auth/forgot-password # Request password reset
-POST /api/auth/reset-password  # Reset password
-```
-
-### User Management
-```
-GET  /api/user/profile         # Get user profile
-PUT  /api/user/profile         # Update user profile
-POST /api/user/dependents      # Add dependent
-GET  /api/user/dependents      # List dependents
-PUT  /api/user/dependents/:id  # Update dependent
-DEL  /api/user/dependents/:id  # Remove dependent
-```
-
-### Membership
-```
-GET  /api/membership/status    # Get membership status
-POST /api/membership/upgrade   # Upgrade membership
-POST /api/membership/payment   # Set up payment method
-```
-
----
-
-## Database Schema (Proposed)
-
-### Users Table
-```sql
-CREATE TABLE users (
-    id              UUID PRIMARY KEY,
-    nric            VARCHAR(9) UNIQUE NOT NULL,
-    full_name       VARCHAR(255) NOT NULL,
-    email           VARCHAR(255) UNIQUE NOT NULL,
-    password_hash   VARCHAR(255) NOT NULL,
-    phone           VARCHAR(20),
-    address         TEXT,
-    date_of_birth   DATE,
-    membership_status VARCHAR(20) DEFAULT 'NOT_REGISTERED',
-    email_verified  BOOLEAN DEFAULT FALSE,
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### Dependents Table
-```sql
-CREATE TABLE dependents (
-    id              UUID PRIMARY KEY,
-    primary_user_id UUID REFERENCES users(id),
-    full_name       VARCHAR(255) NOT NULL,
-    date_of_birth   DATE NOT NULL,
-    relationship    VARCHAR(50) NOT NULL,
-    nric            VARCHAR(9) UNIQUE,
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### Payments Table
-```sql
-CREATE TABLE payments (
-    id              UUID PRIMARY KEY,
-    user_id         UUID REFERENCES users(id),
-    payment_type    VARCHAR(20) NOT NULL, -- 'GIRO' or 'PAYNOW'
-    payment_details JSONB,
-    status          VARCHAR(20) DEFAULT 'PENDING',
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
----
-
-## Open Questions
-
-1. **Dependent Access:** Can dependents sign in using the primary account? If so, how would authorization work?
-2. **Password Timing:** Should users set password during sign-up or after email verification?
-3. **Email Verification:** Is email verification mandatory before account activation?
-4. **Maximum Dependents:** Is there a limit on the number of dependents per primary account?
-5. **Age Threshold:** At what age does a dependent need to create their own account?
-6. **Payment Integration:** Which payment gateway for PayNow/GIRO integration?
-
----
-
-## Timeline (Proposed)
-
-| Phase | Description | Duration |
-|-------|-------------|----------|
-| Phase 1 | Requirements gathering & design | 2 weeks |
-| Phase 2 | Backend API development | 4 weeks |
-| Phase 3 | Frontend development | 4 weeks |
-| Phase 4 | SingPass/MyInfo integration | 3 weeks |
-| Phase 5 | Payment integration | 2 weeks |
-| Phase 6 | Testing & QA | 2 weeks |
-| Phase 7 | UAT & Deployment | 2 weeks |
-| **Total** | | **19 weeks** |
-
----
-
-## Getting Started
-
-*To be updated after project initialization*
-
-```bash
-# Clone repository
-git clone <repository-url>
-
-# Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.example .env
-
-# Run development server
-npm run dev
-```
-
----
-
-## Contributing
-
-*To be updated*
-
----
-
-## License
-
-*To be updated*
-
----
-
-## Contact
-
-**Ar-Raudhah Mosque**  
-*Addressing the needs of the Malay-Muslim community in Singapore*
+## Team
+**Masjid Ar-Raudhah · Skim Pintar Digital Onboarding**  
+Mosque Tech Challenge 2026

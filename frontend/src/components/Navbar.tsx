@@ -1,11 +1,17 @@
 import { useState, useEffect } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
+import { useLanguage } from "@/contexts/LanguageContext"
+import { useAuth } from "@/contexts/AuthContext"
+import { LanguageToggle } from "@/components/LanguageToggle"
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { t } = useLanguage()
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,13 +21,18 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  const handleSignOut = () => {
+    logout()
+    navigate("/")
+  }
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3.5 backdrop-blur-xl border-b border-gold/20 transition-shadow ${
         scrolled ? "shadow-lg shadow-green-deep/5" : ""
       } bg-cream/95`}
     >
-      <div className="flex items-center gap-2.5">
+      <Link to="/" className="flex items-center gap-2.5">
         <div className="w-9.5 h-9.5 rounded-lg bg-green-deep flex items-center justify-center overflow-hidden">
           <span className="text-white text-lg">🕌</span>
         </div>
@@ -31,28 +42,54 @@ export function Navbar() {
           </strong>
           <span className="text-xs text-text-light">Masjid Ar-Raudhah</span>
         </div>
-      </div>
+      </Link>
 
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center gap-7">
-        <a href="#how" className="text-sm font-medium text-text-mid hover:text-green-mid transition-colors">
-          How It Works
+        <a href="/#how" className="text-sm font-medium text-text-mid hover:text-green-mid transition-colors">
+          {t.nav.howItWorks}
         </a>
-        <a href="#schemes" className="text-sm font-medium text-text-mid hover:text-green-mid transition-colors">
-          Schemes
+        <a href="/#schemes" className="text-sm font-medium text-text-mid hover:text-green-mid transition-colors">
+          {t.nav.schemes}
         </a>
-        <a href="#payment" className="text-sm font-medium text-text-mid hover:text-green-mid transition-colors">
-          Payment
+        <a href="/#payment" className="text-sm font-medium text-text-mid hover:text-green-mid transition-colors">
+          {t.nav.payment}
         </a>
-        <a href="#help" className="text-sm font-medium text-text-mid hover:text-green-mid transition-colors">
-          Need Help?
+        <a href="/#help" className="text-sm font-medium text-text-mid hover:text-green-mid transition-colors">
+          {t.nav.needHelp}
         </a>
-        <Link to="/sign-in"><Button size="sm">Login / Register →</Button></Link>
+        <LanguageToggle />
+        {user ? (
+          <div className="flex items-center gap-3">
+            <Link to="/dashboard">
+              <Button size="sm" variant="secondary" className="border border-green-deep/30">
+                {t.nav.dashboard}
+              </Button>
+            </Link>
+            <button
+              onClick={handleSignOut}
+              className="text-sm text-text-mid hover:text-green-deep transition-colors"
+            >
+              {t.nav.signOut}
+            </button>
+          </div>
+        ) : (
+          <Link to="/sign-in"><Button size="sm">{t.nav.loginRegister}</Button></Link>
+        )}
       </div>
 
       {/* Mobile Navigation */}
       <div className="flex md:hidden items-center gap-2">
-        <Link to="/sign-in"><Button size="sm" className="text-xs">Login / Register →</Button></Link>
+        <LanguageToggle />
+        {user ? (
+          <Link to="/dashboard">
+            <Button size="sm" className="text-xs">{t.nav.dashboard}</Button>
+          </Link>
+        ) : (
+          <Link to="/sign-in">
+            <Button size="sm" className="text-xs">{t.nav.loginRegister}</Button>
+          </Link>
+        )}
         <a
           href="https://wa.me/6598337752"
           target="_blank"
@@ -72,18 +109,26 @@ export function Navbar() {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="absolute top-full left-0 right-0 bg-cream border-b border-gold/20 p-4 flex flex-col gap-3 md:hidden shadow-lg">
-          <a href="#how" className="text-sm font-medium text-text-mid hover:text-green-mid py-2" onClick={() => setMobileMenuOpen(false)}>
-            How It Works
+          <a href="/#how" className="text-sm font-medium text-text-mid hover:text-green-mid py-2" onClick={() => setMobileMenuOpen(false)}>
+            {t.nav.howItWorks}
           </a>
-          <a href="#schemes" className="text-sm font-medium text-text-mid hover:text-green-mid py-2" onClick={() => setMobileMenuOpen(false)}>
-            Schemes
+          <a href="/#schemes" className="text-sm font-medium text-text-mid hover:text-green-mid py-2" onClick={() => setMobileMenuOpen(false)}>
+            {t.nav.schemes}
           </a>
-          <a href="#payment" className="text-sm font-medium text-text-mid hover:text-green-mid py-2" onClick={() => setMobileMenuOpen(false)}>
-            Payment
+          <a href="/#payment" className="text-sm font-medium text-text-mid hover:text-green-mid py-2" onClick={() => setMobileMenuOpen(false)}>
+            {t.nav.payment}
           </a>
-          <a href="#help" className="text-sm font-medium text-text-mid hover:text-green-mid py-2" onClick={() => setMobileMenuOpen(false)}>
-            Need Help?
+          <a href="/#help" className="text-sm font-medium text-text-mid hover:text-green-mid py-2" onClick={() => setMobileMenuOpen(false)}>
+            {t.nav.needHelp}
           </a>
+          {user && (
+            <button
+              onClick={handleSignOut}
+              className="text-sm text-left font-medium text-red-600 hover:text-red-700 py-2"
+            >
+              {t.nav.signOut}
+            </button>
+          )}
         </div>
       )}
     </nav>
