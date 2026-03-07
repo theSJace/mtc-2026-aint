@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+
+# Convex
+convex/_generated/
+
+# Build and output
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Logs and debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+*.swp
+*.swo
+*~
+
+# Optional: uncomment to ignore VSCode/Cursor workspace settings
+# .vscode/
+# .cursor/
