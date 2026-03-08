@@ -1,10 +1,13 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  type ReactNode,
-} from "react"
+import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
+
+export interface GiroInfo {
+  bank_name: string
+  account_number_masked: string
+  account_holder_name: string
+  mandate_ref: string
+  status: string   // "ACTIVE" | "PENDING_MANDATE" | "CANCELLED"
+  registered_at: string
+}
 
 export interface UserProfile {
   id: string
@@ -20,6 +23,9 @@ export interface UserProfile {
   email_verified: boolean
   created_at: string
   preferred_language: "en" | "ms"
+  giro: GiroInfo | null
+  consecutive_failed_months: number
+  is_deactivated: boolean
 }
 
 interface AuthContextValue {
@@ -32,36 +38,25 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
-
 const TOKEN_KEY = "sp_token"
 const USER_KEY = "sp_user"
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(
-    () => localStorage.getItem(TOKEN_KEY)
-  )
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY))
   const [user, setUser] = useState<UserProfile | null>(() => {
-    try {
-      const raw = localStorage.getItem(USER_KEY)
-      return raw ? JSON.parse(raw) : null
-    } catch {
-      return null
-    }
+    try { const raw = localStorage.getItem(USER_KEY); return raw ? JSON.parse(raw) : null }
+    catch { return null }
   })
-  const [isLoading] = useState(false)
 
   const login = useCallback((tok: string, u: UserProfile) => {
     localStorage.setItem(TOKEN_KEY, tok)
     localStorage.setItem(USER_KEY, JSON.stringify(u))
-    setToken(tok)
-    setUser(u)
+    setToken(tok); setUser(u)
   }, [])
 
   const logout = useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
-    setToken(null)
-    setUser(null)
+    localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY)
+    setToken(null); setUser(null)
   }, [])
 
   const refreshUser = useCallback((updated: UserProfile) => {
@@ -70,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, token, isLoading: false, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )
