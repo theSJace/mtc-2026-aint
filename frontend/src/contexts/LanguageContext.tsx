@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useState, type ReactNode } from "react"
 import { translations, type Lang, type Translations } from "@/lib/i18n"
 
 interface LanguageContextValue {
@@ -22,7 +22,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, l)
   }
 
-  const t = translations[lang]
+  const t = translations[lang] as Translations
 
   return (
     <LanguageContext.Provider value={{ lang, setLang, t }}>

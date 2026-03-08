@@ -5,6 +5,7 @@ import { ArrowLeft, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SingpassButton } from "@/components/SingpassButton"
 import { SingpassScanAndConfirm } from "@/components/SingpassScanAndConfirm"
+import { LanguageToggle } from "@/components/LanguageToggle"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -142,11 +143,12 @@ export function SignUp() {
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center pt-[80px] pb-12 px-4">
-      <div className="w-full max-w-[560px] flex flex-col gap-2">
+      <div className="w-full max-w-[560px] flex items-center justify-between gap-2">
         <Link to="/sign-in" className="flex items-center gap-2 text-sm text-text-mid hover:text-green-deep w-fit">
           <ArrowLeft className="w-4 h-4" />
           {t.signUp.back}
         </Link>
+        <LanguageToggle />
       </div>
 
       <Card className="w-full max-w-[560px] mt-6 rounded-xl border border-gold/20 shadow-lg shadow-green-deep/10">
@@ -271,7 +273,7 @@ export function SignUp() {
                           disabled={isSubmitting}
                         >
                           <option value="">{t.signUp.selectRelationship}</option>
-                          {RELATIONSHIP_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                          {RELATIONSHIP_OPTIONS.map((opt) => <option key={opt} value={opt}>{t.signUp.relationshipLabels[opt]}</option>)}
                         </select>
                       </div>
                       <div className="flex flex-col gap-1.5">

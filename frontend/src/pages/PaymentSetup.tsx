@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { QRCodeSVG } from "qrcode.react"
-import { CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -126,9 +125,9 @@ export function PaymentSetup() {
       <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4">
         <div className="text-center max-w-sm">
           <div className="text-4xl mb-4">⚠️</div>
-          <h2 className="font-playfair text-2xl text-green-deep mb-3">No Tier Selected</h2>
-          <p className="text-text-mid text-sm mb-6">Please select a membership tier before setting up payment.</p>
-          <Button onClick={() => navigate("/select-tier")} className="rounded-xl">Select a Tier →</Button>
+          <h2 className="font-playfair text-2xl text-green-deep mb-3">{t.payment.noTierSelected}</h2>
+          <p className="text-text-mid text-sm mb-6">{t.payment.selectTierFirst}</p>
+          <Button onClick={() => navigate("/select-tier")} className="rounded-xl">{t.payment.selectTierCta}</Button>
         </div>
       </div>
     )
@@ -139,8 +138,8 @@ export function PaymentSetup() {
       {/* Progress */}
       <div className="w-full max-w-[600px] mb-8 mt-4">
         <div className="flex items-center gap-2">
-          {["Account Created", "Tier Selected", "Payment Setup", "Active"].map((step, i) => (
-            <div key={step} className="flex items-center gap-2 flex-1">
+          {[t.payment.progressStep1, t.payment.progressStep2, t.payment.progressStep3, t.payment.progressStep4].map((step, i) => (
+            <div key={i} className="flex items-center gap-2 flex-1">
               <div className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold flex-shrink-0 ${i < 2 ? "bg-green-soft text-white" : i === 2 ? "bg-green-deep text-white" : "bg-green-pale text-text-light"}`}>
                 {i < 2 ? "✓" : i + 1}
               </div>
@@ -160,7 +159,7 @@ export function PaymentSetup() {
         {/* Membership summary */}
         <div className="bg-white rounded-2xl border border-green-pale px-6 py-4 mb-6 flex items-center justify-between">
           <div>
-            <div className="text-xs text-text-light mb-1">{tierLabel} Membership</div>
+            <div className="text-xs text-text-light mb-1">{tierLabel} {t.payment.membership}</div>
             <div className="font-playfair text-2xl text-green-deep font-bold">${amount}<span className="text-sm font-normal text-text-light">/month</span></div>
           </div>
           <div className="text-3xl">🕌</div>
@@ -182,7 +181,7 @@ export function PaymentSetup() {
                 method === m ? "border-green-deep bg-green-deep text-white" : "border-green-pale text-green-deep hover:border-green-soft"
               )}
             >
-              {m === "PAYNOW" ? `📲 ${t.payment.paynow}` : `🏦 GIRO`}
+              {m === "PAYNOW" ? `📲 ${t.payment.paynow}` : `🏦 ${t.payment.giroShort}`}
             </button>
           ))}
         </div>

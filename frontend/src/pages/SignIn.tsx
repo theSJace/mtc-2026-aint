@@ -7,6 +7,7 @@ import { SingpassButton } from "@/components/SingpassButton"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { LanguageToggle } from "@/components/LanguageToggle"
 import { cn } from "@/lib/utils"
 import { fetchMyInfoAfterSingpassAuth } from "@/lib/singpass"
 import { auth as apiAuth } from "@/lib/api"
@@ -84,7 +85,7 @@ export function SignIn() {
   if (singpassStep === "scan") {
     return (
       <div className="min-h-screen bg-cream flex flex-col items-center pt-[80px] pb-12 px-4">
-        <div className="w-full max-w-[440px] flex flex-col gap-2">
+        <div className="w-full max-w-[440px] flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={handleSingpassBack}
@@ -93,6 +94,7 @@ export function SignIn() {
             <ArrowLeft className="w-4 h-4" />
             {t.signIn.back}
           </button>
+          <LanguageToggle />
         </div>
 
         <Card className="w-full max-w-[440px] mt-6 rounded-xl border border-gold/20 shadow-lg shadow-green-deep/10">
@@ -150,11 +152,12 @@ export function SignIn() {
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center pt-[80px] pb-12 px-4">
-      <div className="w-full max-w-[440px] flex flex-col gap-2">
+      <div className="w-full max-w-[440px] flex items-center justify-between gap-2">
         <Link to="/" className="flex items-center gap-2 text-sm text-text-mid hover:text-green-deep w-fit">
           <ArrowLeft className="w-4 h-4" />
           {t.signIn.back}
         </Link>
+        <LanguageToggle />
       </div>
 
       <Card className="w-full max-w-[440px] mt-6 rounded-xl border border-gold/20 shadow-lg shadow-green-deep/10">
