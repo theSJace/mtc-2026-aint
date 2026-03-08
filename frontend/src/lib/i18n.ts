@@ -3,7 +3,7 @@
  * English (en) and Bahasa Melayu (ms)
  */
 
-export type Lang = "en" | "ms";
+export type Lang = "en" | "ms"
 
 export const translations = {
   en: {
@@ -36,8 +36,7 @@ export const translations = {
       coverageActive: "✦ Coverage Active",
       instantSetup: "⚡ Instant Setup",
       sadaqahTitle: "Sadaqah Jariyah",
-      sadaqahDesc:
-        "Monthly donation to mosque building fund — continuous charity for all.",
+      sadaqahDesc: "Monthly donation to mosque building fund — continuous charity for all.",
       urusanJenazahBadge: "🕌 Urusan Jenazah",
       coveredForFamily: "Covered for you & family",
       no30DayWait: "⚡ No more 30-day wait",
@@ -46,8 +45,7 @@ export const translations = {
     // CTA (home)
     cta: {
       readyToJoin: "Ready to join the community?",
-      alhamdulillah:
-        "Alhamdulillah — may Allah SWT bless your wealth, protect your family, and accept this Sadaqah Jariyah from you.",
+      alhamdulillah: "Alhamdulillah — may Allah SWT bless your wealth, protect your family, and accept this Sadaqah Jariyah from you.",
       daftarSekarang: "✦ Daftar Sekarang — Login / Register",
       helpAtCounter: "🕌 Help at Counter",
       pdpaPortal: "🔒 PDPA Protected · Official LPM Ar-Raudhah Portal",
@@ -56,27 +54,11 @@ export const translations = {
     howItWorks: {
       newProcess: "The New Process",
       from30Days: "From 30 days to under 24 hours",
-      replacedGiro:
-        "We've replaced the paper GIRO process with a simple digital flow. No queues, no waiting weeks for bank approval.",
+      replacedGiro: "We've replaced the paper GIRO process with a simple digital flow. No queues, no waiting weeks for bank approval.",
       steps: [
-        {
-          title: "Fill Your Details",
-          description:
-            "Login or register using SingPass MyInfo (auto-fills your details) or fill in manually. Add dependants for Pintar Plus.",
-          time: "5 minutes",
-        },
-        {
-          title: "Make Your First Donation",
-          description:
-            "Scan the personalised PayNow QR code or set up a monthly standing instruction in your banking app.",
-          time: "2 minutes",
-        },
-        {
-          title: "You're Active!",
-          description:
-            "Instant WhatsApp confirmation. Track your status, payments, and dependants from your member dashboard.",
-          time: "Instant",
-        },
+        { title: "Fill Your Details", description: "Login or register using SingPass MyInfo (auto-fills your details) or fill in manually. Add dependants for Pintar Plus.", time: "5 minutes" },
+        { title: "Make Your First Donation", description: "Scan the personalised PayNow QR code or set up a monthly standing instruction in your banking app.", time: "2 minutes" },
+        { title: "You're Active!", description: "Instant WhatsApp confirmation. Track your status, payments, and dependants from your member dashboard.", time: "Instant" },
       ],
     },
     // Schemes (home)
@@ -84,35 +66,28 @@ export const translations = {
       whatIs: "What is Skim Pintar?",
       moreThanDonation: "More than a donation.",
       promiseFamily: "A promise to your family.",
-      description:
-        "As a regular donor to Masjid Ar-Raudhah's building fund, the mosque provides full urusan jenazah services for you and your loved ones — free of charge. Community gotong royong, not insurance.",
-      quote:
-        '"This is Sadaqah Jariyah — continuous charity. Your contribution, however small, keeps the mosque running and the community cared for."',
+      description: "As a regular donor to Masjid Ar-Raudhah's building fund, the mosque provides full urusan jenazah services for you and your loved ones — free of charge. Community gotong royong, not insurance.",
+      quote: "\"This is Sadaqah Jariyah — continuous charity. Your contribution, however small, keeps the mosque running and the community cared for.\"",
       pintarLabel: "Skim Pintar",
       perMonth5: "$5 / month",
-      benefit1:
-        "Free urusan jenazah (ritual bathing, shrouding, burial, transport)",
+      benefit1: "Free urusan jenazah (ritual bathing, shrouding, burial, transport)",
       benefit2: "20% discount on Masjid Ar-Raudhah religious courses",
       benefit3: "Immediate activation upon first payment",
       pintarPlusLabel: "Skim Pintar Plus",
       perMonth20: "$20+ / month",
-      plusBenefit1:
-        "All Pintar benefits for you, plus family members at same address",
+      plusBenefit1: "All Pintar benefits for you, plus family members at same address",
       plusBenefit2: "50% course discount for parents & in-laws",
-      plusBenefit3:
-        "Cover up to 10 dependants (spouse, children, parents, in-laws, siblings)",
+      plusBenefit3: "Cover up to 10 dependants (spouse, children, parents, in-laws, siblings)",
       plusBenefit4: "Donate more — $30, $50, or any amount above $20",
     },
     // Payment section (landing page)
     paymentSection: {
       paymentMethods: "Payment Methods",
       simpleFamiliar: "Simple, familiar, and interest-free",
-      chooseRibaFree:
-        "Choose what works for you. All options are riba-free and MAS-compliant.",
+      chooseRibaFree: "Choose what works for you. All options are riba-free and MAS-compliant.",
       recommended: "✦ Recommended",
       paynow: "PayNow",
-      paynowDesc:
-        "Scan a personalised QR monthly, or set up a standing instruction once and never think about it again. Instant — no bank delays.",
+      paynowDesc: "Scan a personalised QR monthly, or set up a standing instruction once and never think about it again. Instant — no bank delays.",
       paynowStep1: "We generate your unique PayNow QR (Ref: SPTAR-XXXX)",
       paynowStep2: "Scan with any SG banking app (DBS, OCBC, UOB, POSB…)",
       paynowStep3: "Payment received instantly with your reference tagged",
@@ -120,14 +95,12 @@ export const translations = {
       yourPersonalisedQR: "Your Personalised QR Code",
       generatedAfterReg: "Generated after registration · Ref: SPTAR-XXXX",
       bankStanding: "Bank Standing Instruction",
-      bankStandingDesc:
-        "Set up automatic monthly PayNow transfers in your own banking app. Cancel anytime.",
+      bankStandingDesc: "Set up automatic monthly PayNow transfers in your own banking app. Cancel anytime.",
       bankStep1: "Open your banking app (DBS/POSB, OCBC, UOB)",
       bankStep2: "Add Masjid Ar-Raudhah's PayNow UEN as a favourite",
       bankStep3: "Set recurring monthly transfer with your SPTAR reference",
       cashAtCounter: "Cash at Counter",
-      cashDesc:
-        "Prefer to pay in person? Walk in during opening hours — staff record your payment immediately.",
+      cashDesc: "Prefer to pay in person? Walk in during opening hours — staff record your payment immediately.",
       cashStep1: "Visit mosque counter during opening hours",
       cashStep2: "Quote your membership number (SPTAR-XXXX)",
       cashStep3: "Receive official receipt and instant status update",
@@ -136,24 +109,11 @@ export const translations = {
     help: {
       notSureHow: "Not sure how to start?",
       sitWithYou: "We'll sit with you\nand do it together.",
-      staffTrained:
-        "Our mosque staff are trained to help every jemaah — no matter your age or comfort with technology. Come as you are.",
+      staffTrained: "Our mosque staff are trained to help every jemaah — no matter your age or comfort with technology. Come as you are.",
       features: [
-        {
-          title: "Assisted Registration at Counter",
-          description:
-            "Staff will guide you through registration on a tablet. With Singpass, your details auto-fill in seconds.",
-        },
-        {
-          title: "Family Can Login / Register for You",
-          description:
-            "Your son, daughter, or any family member can register and set up monthly PayNow on your behalf.",
-        },
-        {
-          title: "WhatsApp Us First",
-          description:
-            "Not sure what to bring? WhatsApp us and we'll tell you exactly what you need. We speak Malay and English.",
-        },
+        { title: "Assisted Registration at Counter", description: "Staff will guide you through registration on a tablet. With Singpass, your details auto-fill in seconds." },
+        { title: "Family Can Login / Register for You", description: "Your son, daughter, or any family member can register and set up monthly PayNow on your behalf." },
+        { title: "WhatsApp Us First", description: "Not sure what to bring? WhatsApp us and we'll tell you exactly what you need. We speak Malay and English." },
       ],
       contactUs: "Hubungi Kami",
       weAreHere: "We're here to help. No question is too small.",
@@ -172,43 +132,18 @@ export const translations = {
       commonQuestions: "Common Questions",
       soalanLazim: "Soalan Lazim",
       items: [
-        {
-          question: "Is this insurance? Is it Shariah-compliant?",
-          answer:
-            "Skim Pintar is a donation (sadaqah) to the mosque's building fund — not insurance. There is no akad bay'. The mosque provides urusan jenazah as a courtesy to regular donors. Fully Shariah-compliant, operating for 18 years.",
-        },
-        {
-          question: "What happens if I miss a payment?",
-          answer:
-            "You'll receive a WhatsApp reminder if a payment is missed. You have a grace period before coverage is paused. After 3 consecutive missed payments, coverage is suspended — but you'll receive multiple warnings first. No more silent cancellations.",
-        },
-        {
-          question: "How quickly does coverage start?",
-          answer:
-            "Coverage activates immediately upon your first successful PayNow payment — usually within minutes. Previously, GIRO took 21–30 working days. The new system eliminates that wait entirely.",
-        },
-        {
-          question: "Who can I add as a dependant for Pintar Plus?",
-          answer:
-            "You may add spouse, children, siblings, parents and in-laws. Same-address family (Section A) and those at different addresses (Section B, up to 10 entries). You'll need their full name (per NRIC) and date of birth.",
-        },
-        {
-          question: "Can I pay more than the minimum?",
-          answer:
-            "Yes. The minimum for Pintar Plus is $20/month, but you're welcome to donate $30, $50, or any amount. Any amount above the minimum is additional sadaqah to the mosque fund. Benefits remain the same.",
-        },
-        {
-          question: "Is my data safe? What about PDPA?",
-          answer:
-            "Your personal data is protected under Singapore's PDPA. Lembaga Pentadbir Masjid Ar-Raudhah is the data controller. Data is used solely for membership administration. You may request access or correction at any time.",
-        },
+        { question: "Is this insurance? Is it Shariah-compliant?", answer: "Skim Pintar is a donation (sadaqah) to the mosque's building fund — not insurance. There is no akad bay'. The mosque provides urusan jenazah as a courtesy to regular donors. Fully Shariah-compliant, operating for 18 years." },
+        { question: "What happens if I miss a payment?", answer: "You'll receive a WhatsApp reminder if a payment is missed. You have a grace period before coverage is paused. After 3 consecutive missed payments, coverage is suspended — but you'll receive multiple warnings first. No more silent cancellations." },
+        { question: "How quickly does coverage start?", answer: "Coverage activates immediately upon your first successful PayNow payment — usually within minutes. Previously, GIRO took 21–30 working days. The new system eliminates that wait entirely." },
+        { question: "Who can I add as a dependant for Pintar Plus?", answer: "You may add spouse, children, siblings, parents and in-laws. Same-address family (Section A) and those at different addresses (Section B, up to 10 entries). You'll need their full name (per NRIC) and date of birth." },
+        { question: "Can I pay more than the minimum?", answer: "Yes. The minimum for Pintar Plus is $20/month, but you're welcome to donate $30, $50, or any amount. Any amount above the minimum is additional sadaqah to the mosque fund. Benefits remain the same." },
+        { question: "Is my data safe? What about PDPA?", answer: "Your personal data is protected under Singapore's PDPA. Lembaga Pentadbir Masjid Ar-Raudhah is the data controller. Data is used solely for membership administration. You may request access or correction at any time." },
       ],
     },
     // Footer
     footer: {
       lpmName: "Lembaga Pentadbir Masjid Ar-Raudhah",
-      addressTel:
-        "30 Bukit Batok East Ave 2, Singapore 659919 · Tel: 6899 5840",
+      addressTel: "30 Bukit Batok East Ave 2, Singapore 659919 · Tel: 6899 5840",
       privacyPolicy: "Privacy Policy",
       pdpaNotice: "PDPA Notice",
       contact: "Contact",
@@ -311,8 +246,7 @@ export const translations = {
     // Payment setup
     payment: {
       title: "Set Up Payment",
-      subtitle:
-        "Choose your preferred payment method to activate your membership.",
+      subtitle: "Choose your preferred payment method to activate your membership.",
       paynow: "PayNow",
       paynowDesc:
         "Scan the QR code below with any Singapore banking app to make an instant one-time or recurring payment.",
@@ -321,8 +255,7 @@ export const translations = {
         "Set up a monthly automatic deduction. Your bank will process the mandate within 3–5 working days.",
       amount: "Monthly Amount",
       reference: "Reference",
-      scanInstructions:
-        "Scan with DBS, OCBC, UOB, POSB or any PayNow-enabled app",
+      scanInstructions: "Scan with DBS, OCBC, UOB, POSB or any PayNow-enabled app",
       confirm: "I've Paid via PayNow",
       confirming: "Confirming…",
       bankName: "Bank Name *",
@@ -332,12 +265,10 @@ export const translations = {
       submitGiro: "Submit GIRO Mandate",
       submitting: "Submitting…",
       giroSuccess: "GIRO mandate submitted successfully!",
-      giroMessage:
-        "Your monthly deduction will begin on the 1st of next month.",
+      giroMessage: "Your monthly deduction will begin on the 1st of next month.",
       paymentSuccess: "Payment confirmed! Your membership is now active.",
       membershipId: "Membership ID",
-      selectTierFirst:
-        "Please select a membership tier before setting up payment.",
+      selectTierFirst: "Please select a membership tier before setting up payment.",
       noTierSelected: "No Tier Selected",
       selectTierCta: "Select a Tier →",
       progressStep1: "Account Created",
@@ -350,9 +281,44 @@ export const translations = {
       selectMonth: "Month",
       selectYear: "Year",
       generateQR: "Generate QR code",
-      alreadyPaidForPeriod:
-        "You have already paid for this month. Please select another period.",
+      alreadyPaidForPeriod: "You have already paid your subscription for this month. You can make an additional donation instead.",
       period: "Period",
+      // Donation
+      donationTitle: "Additional Donation",
+      donationDesc: "You've already paid your monthly subscription. Make an additional donation to support Masjid Ar-Raudhah.",
+      donationAmount: "Donation Amount (SGD) *",
+      donationAmountPlaceholder: "e.g. 10.00",
+      donationTab: "Donation",
+      subscriptionTab: "Monthly Fee",
+      donateBtn: "Donate",
+      // Payment type labels
+      categorySubscription: "Subscription",
+      categoryDonation: "Donation",
+      paymentTypeColumn: "Type",
+      // Monthly status indicator
+      monthlyPaidTitle: "This Month's Fee",
+      monthlyPaid: "Paid ✓",
+      monthlyUnpaid: "Unpaid",
+      monthlyDaysLeft: (days: number) => days === 0 ? "Due today!" : `${days} day${days === 1 ? "" : "s"} left`,
+      giroWillDeduct: "GIRO will auto-deduct",
+      giroSchedule: "GIRO deducts on the 15th (retry 30th)",
+      failedMonths: (n: number) => `${n}/3 missed months`,
+      deactivatedWarning: "Subscription deactivated after 3 missed payments. Please re-activate your tier.",
+      // GIRO in profile
+      giroSection: "GIRO Auto-Deduction",
+      giroRegistered: "GIRO Registered",
+      giroNotRegistered: "No GIRO set up",
+      giroBank: "Bank",
+      giroAccount: "Account",
+      giroMandate: "Mandate Ref",
+      giroStatus: "Status",
+      giroStatuses: { ACTIVE: "Active", PENDING_MANDATE: "Pending Bank Confirmation", CANCELLED: "Cancelled" },
+      registerGiro: "Register GIRO",
+      cancelGiro: "Cancel GIRO",
+      giroRegisteredSuccess: "GIRO mandate registered successfully!",
+      giroCancelConfirm: "Cancel your GIRO mandate?",
+      // Simulate cycle (dev)
+      simulateCycle: "Simulate GIRO Cycle",
     },
     // Dashboard
     dashboard: {
@@ -372,7 +338,7 @@ export const translations = {
       selectTier: "Select a Tier to Activate",
       dependants: "Family Members",
       noDependants: "No family members added yet.",
-      addDependant: "Add Family Member",
+      addDependant: "+ Add Family Member",
       edit: "Edit",
       remove: "Remove",
       confirmRemove: "Remove this dependant?",
@@ -386,7 +352,7 @@ export const translations = {
       paymentStatus: "Status",
       paymentAmount: "Amount",
       paymentDate: "Date",
-      statuses2: {
+      paymentTypeColumn: "Type",
         PENDING: "Pending",
         COMPLETED: "Completed",
         FAILED: "Failed",
@@ -456,8 +422,7 @@ export const translations = {
       coverageActive: "✦ Liputan Aktif",
       instantSetup: "⚡ Persediaan Segera",
       sadaqahTitle: "Sadaqah Jariyah",
-      sadaqahDesc:
-        "Derma bulanan ke dana pembinaan masjid — sedekah berterusan untuk semua.",
+      sadaqahDesc: "Derma bulanan ke dana pembinaan masjid — sedekah berterusan untuk semua.",
       urusanJenazahBadge: "🕌 Urusan Jenazah",
       coveredForFamily: "Dilindungi untuk anda & keluarga",
       no30DayWait: "⚡ Tiada lagi tunggu 30 hari",
@@ -466,8 +431,7 @@ export const translations = {
     // CTA (home)
     cta: {
       readyToJoin: "Bersedia menyertai komuniti?",
-      alhamdulillah:
-        "Alhamdulillah — semoga Allah SWT memberkati harta anda, melindungi keluarga anda, dan menerima Sadaqah Jariyah ini daripada anda.",
+      alhamdulillah: "Alhamdulillah — semoga Allah SWT memberkati harta anda, melindungi keluarga anda, dan menerima Sadaqah Jariyah ini daripada anda.",
       daftarSekarang: "✦ Daftar Sekarang — Log Masuk / Daftar",
       helpAtCounter: "🕌 Bantuan di Kaunter",
       pdpaPortal: "🔒 Dilindungi PDPA · Portal Rasmi LPM Ar-Raudhah",
@@ -476,27 +440,11 @@ export const translations = {
     howItWorks: {
       newProcess: "Proses Baharu",
       from30Days: "Dari 30 hari kepada kurang 24 jam",
-      replacedGiro:
-        "Kami telah menggantikan proses GIRO kertas dengan aliran digital yang mudah. Tiada barisan, tiada menunggu berminggu-minggu untuk kelulusan bank.",
+      replacedGiro: "Kami telah menggantikan proses GIRO kertas dengan aliran digital yang mudah. Tiada barisan, tiada menunggu berminggu-minggu untuk kelulusan bank.",
       steps: [
-        {
-          title: "Isi Butiran Anda",
-          description:
-            "Log masuk atau daftar menggunakan SingPass MyInfo (isi auto butiran anda) atau isi secara manual. Tambah tanggungan untuk Pintar Plus.",
-          time: "5 minit",
-        },
-        {
-          title: "Buat Derma Pertama Anda",
-          description:
-            "Imbas kod QR PayNow peribadi atau sediakan arahan berdiri bulanan dalam aplikasi perbankan anda.",
-          time: "2 minit",
-        },
-        {
-          title: "Anda Aktif!",
-          description:
-            "Pengesahan WhatsApp serta-merta. Jejaki status, pembayaran dan tanggungan dari papan pemuka ahli anda.",
-          time: "Serta-merta",
-        },
+        { title: "Isi Butiran Anda", description: "Log masuk atau daftar menggunakan SingPass MyInfo (isi auto butiran anda) atau isi secara manual. Tambah tanggungan untuk Pintar Plus.", time: "5 minit" },
+        { title: "Buat Derma Pertama Anda", description: "Imbas kod QR PayNow peribadi atau sediakan arahan berdiri bulanan dalam aplikasi perbankan anda.", time: "2 minit" },
+        { title: "Anda Aktif!", description: "Pengesahan WhatsApp serta-merta. Jejaki status, pembayaran dan tanggungan dari papan pemuka ahli anda.", time: "Serta-merta" },
       ],
     },
     // Schemes (home)
@@ -504,52 +452,41 @@ export const translations = {
       whatIs: "Apakah Skim Pintar?",
       moreThanDonation: "Lebih daripada derma.",
       promiseFamily: "Janji untuk keluarga anda.",
-      description:
-        "Sebagai penderma tetap kepada dana pembinaan Masjid Ar-Raudhah, masjid menyediakan perkhidmatan urusan jenazah penuh untuk anda dan orang tersayang — percuma. Gotong royong komuniti, bukan insurans.",
-      quote:
-        '"Ini ialah Sadaqah Jariyah — sedekah berterusan. Sumbangan anda, walau kecil, mengekalkan masjid dan komuniti terjaga."',
+      description: "Sebagai penderma tetap kepada dana pembinaan Masjid Ar-Raudhah, masjid menyediakan perkhidmatan urusan jenazah penuh untuk anda dan orang tersayang — percuma. Gotong royong komuniti, bukan insurans.",
+      quote: "\"Ini ialah Sadaqah Jariyah — sedekah berterusan. Sumbangan anda, walau kecil, mengekalkan masjid dan komuniti terjaga.\"",
       pintarLabel: "Skim Pintar",
       perMonth5: "$5 / bulan",
-      benefit1:
-        "Urusan jenazah percuma (mandi, kafan, pengebumian, pengangkutan)",
+      benefit1: "Urusan jenazah percuma (mandi, kafan, pengebumian, pengangkutan)",
       benefit2: "Diskaun 20% untuk kursus agama Masjid Ar-Raudhah",
       benefit3: "Pengaktifan serta-merta selepas pembayaran pertama",
       pintarPlusLabel: "Skim Pintar Plus",
       perMonth20: "$20+ / bulan",
-      plusBenefit1:
-        "Semua manfaat Pintar untuk anda, plus ahli keluarga di alamat yang sama",
+      plusBenefit1: "Semua manfaat Pintar untuk anda, plus ahli keluarga di alamat yang sama",
       plusBenefit2: "Diskaun 50% kursus untuk ibu bapa & mentua",
-      plusBenefit3:
-        "Liputan sehingga 10 tanggungan (pasangan, anak, ibu bapa, mentua, adik-beradik)",
+      plusBenefit3: "Liputan sehingga 10 tanggungan (pasangan, anak, ibu bapa, mentua, adik-beradik)",
       plusBenefit4: "Derma lebih — $30, $50, atau sebarang jumlah melebihi $20",
     },
     // Payment section (landing page)
     paymentSection: {
       paymentMethods: "Kaedah Pembayaran",
       simpleFamiliar: "Mudah, biasa, dan bebas faedah",
-      chooseRibaFree:
-        "Pilih apa yang sesuai untuk anda. Semua pilihan bebas riba dan mematuhi MAS.",
+      chooseRibaFree: "Pilih apa yang sesuai untuk anda. Semua pilihan bebas riba dan mematuhi MAS.",
       recommended: "✦ Disyorkan",
       paynow: "PayNow",
-      paynowDesc:
-        "Imbas QR peribadi setiap bulan, atau sediakan arahan berdiri sekali dan tidak perlu fikir lagi. Serta-merta — tiada kelewatan bank.",
+      paynowDesc: "Imbas QR peribadi setiap bulan, atau sediakan arahan berdiri sekali dan tidak perlu fikir lagi. Serta-merta — tiada kelewatan bank.",
       paynowStep1: "Kami menjana kod QR PayNow unik anda (Ruj: SPTAR-XXXX)",
-      paynowStep2:
-        "Imbas dengan mana-mana aplikasi perbankan SG (DBS, OCBC, UOB, POSB…)",
-      paynowStep3:
-        "Pembayaran diterima serta-merta dengan rujukan anda ditanda",
+      paynowStep2: "Imbas dengan mana-mana aplikasi perbankan SG (DBS, OCBC, UOB, POSB…)",
+      paynowStep3: "Pembayaran diterima serta-merta dengan rujukan anda ditanda",
       paynowStep4: "Atau: sediakan arahan berdiri bulanan sekali — selesai!",
       yourPersonalisedQR: "Kod QR Peribadi Anda",
       generatedAfterReg: "Dijana selepas pendaftaran · Ruj: SPTAR-XXXX",
       bankStanding: "Arahan Berdiri Bank",
-      bankStandingDesc:
-        "Sediakan pindahan PayNow bulanan automatik dalam aplikasi perbankan anda. Batal bila-bila masa.",
+      bankStandingDesc: "Sediakan pindahan PayNow bulanan automatik dalam aplikasi perbankan anda. Batal bila-bila masa.",
       bankStep1: "Buka aplikasi perbankan anda (DBS/POSB, OCBC, UOB)",
       bankStep2: "Tambah UEN PayNow Masjid Ar-Raudhah sebagai kegemaran",
       bankStep3: "Tetapkan pindahan bulanan berulang dengan rujukan SPTAR anda",
       cashAtCounter: "Tunai di Kaunter",
-      cashDesc:
-        "Lebih suka bayar secara bersemuka? Datang semasa waktu operasi — kakitangan merekod pembayaran anda serta-merta.",
+      cashDesc: "Lebih suka bayar secara bersemuka? Datang semasa waktu operasi — kakitangan merekod pembayaran anda serta-merta.",
       cashStep1: "Lawati kaunter masjid semasa waktu operasi",
       cashStep2: "Nyatakan nombor keahlian anda (SPTAR-XXXX)",
       cashStep3: "Terima resit rasmi dan kemas kini status serta-merta",
@@ -558,28 +495,14 @@ export const translations = {
     help: {
       notSureHow: "Tidak pasti bagaimana untuk bermula?",
       sitWithYou: "Kami akan duduk bersama anda\ndan melakukannya bersama.",
-      staffTrained:
-        "Kakitangan masjid kami dilatih untuk membantu setiap jemaah — tidak kira usia atau keselesaan dengan teknologi. Datang sebagaimana adanya.",
+      staffTrained: "Kakitangan masjid kami dilatih untuk membantu setiap jemaah — tidak kira usia atau keselesaan dengan teknologi. Datang sebagaimana adanya.",
       features: [
-        {
-          title: "Pendaftaran Dibantu di Kaunter",
-          description:
-            "Kakitangan akan memandu anda melalui pendaftaran di tablet. Dengan Singpass, butiran anda diisi auto dalam beberapa saat.",
-        },
-        {
-          title: "Keluarga Boleh Log Masuk / Daftar Untuk Anda",
-          description:
-            "Anak lelaki, anak perempuan, atau ahli keluarga boleh mendaftar dan menyediakan PayNow bulanan bagi pihak anda.",
-        },
-        {
-          title: "WhatsApp Kami Dulu",
-          description:
-            "Tidak pasti apa yang perlu dibawa? WhatsApp kami dan kami akan beritahu apa yang anda perlukan. Kami bertutur Melayu dan Inggeris.",
-        },
+        { title: "Pendaftaran Dibantu di Kaunter", description: "Kakitangan akan memandu anda melalui pendaftaran di tablet. Dengan Singpass, butiran anda diisi auto dalam beberapa saat." },
+        { title: "Keluarga Boleh Log Masuk / Daftar Untuk Anda", description: "Anak lelaki, anak perempuan, atau ahli keluarga boleh mendaftar dan menyediakan PayNow bulanan bagi pihak anda." },
+        { title: "WhatsApp Kami Dulu", description: "Tidak pasti apa yang perlu dibawa? WhatsApp kami dan kami akan beritahu apa yang anda perlukan. Kami bertutur Melayu dan Inggeris." },
       ],
       contactUs: "Hubungi Kami",
-      weAreHere:
-        "Kami di sini untuk membantu. Tiada soalan yang terlalu kecil.",
+      weAreHere: "Kami di sini untuk membantu. Tiada soalan yang terlalu kecil.",
       whatsapp: "WhatsApp",
       whatsappDesc: "9833 7752 — respons terpantas",
       email: "E-mel",
@@ -595,44 +518,18 @@ export const translations = {
       commonQuestions: "Soalan Lazim",
       soalanLazim: "Soalan Lazim",
       items: [
-        {
-          question: "Adakah ini insurans? Adakah ia patuh Syariah?",
-          answer:
-            "Skim Pintar ialah derma (sadaqah) ke dana pembinaan masjid — bukan insurans. Tiada akad bay'. Masjid menyediakan urusan jenazah sebagai budi bicara kepada penderma tetap. Sepenuhnya patuh Syariah, beroperasi selama 18 tahun.",
-        },
-        {
-          question: "Apa yang berlaku jika saya terlepas pembayaran?",
-          answer:
-            "Anda akan menerima peringatan WhatsApp jika pembayaran terlepas. Anda ada tempoh tangguh sebelum liputan dijeda. Selepas 3 pembayaran berturut-terturut terlepas, liputan digantung — tetapi anda akan menerima beberapa amaran terlebih dahulu. Tiada lagi pembatalan senyap.",
-        },
-        {
-          question: "Berapa cepat liputan bermula?",
-          answer:
-            "Liputan diaktifkan serta-merta selepas pembayaran PayNow pertama anda berjaya — biasanya dalam beberapa minit. Sebelum ini, GIRO mengambil 21–30 hari bekerja. Sistem baharu menghapuskan tunggu itu sepenuhnya.",
-        },
-        {
-          question:
-            "Siapa yang boleh saya tambah sebagai tanggungan untuk Pintar Plus?",
-          answer:
-            "Anda boleh tambah pasangan, anak, adik-beradik, ibu bapa dan mentua. Keluarga alamat sama (Seksyen A) dan yang di alamat berbeza (Seksyen B, sehingga 10 entri). Anda perlukan nama penuh (mengikut NRIC) dan tarikh lahir mereka.",
-        },
-        {
-          question: "Boleh saya bayar lebih daripada minimum?",
-          answer:
-            "Ya. Minimum untuk Pintar Plus ialah $20/bulan, tetapi anda dialu-alukan untuk menderma $30, $50, atau sebarang jumlah. Sebarang jumlah melebihi minimum ialah sadaqah tambahan ke dana masjid. Manfaat tetap sama.",
-        },
-        {
-          question: "Adakah data saya selamat? Bagaimana dengan PDPA?",
-          answer:
-            "Data peribadi anda dilindungi di bawah PDPA Singapura. Lembaga Pentadbir Masjid Ar-Raudhah ialah pengawal data. Data digunakan semata-mata untuk pentadbiran keahlian. Anda boleh meminta akses atau pembetulan pada bila-bila masa.",
-        },
+        { question: "Adakah ini insurans? Adakah ia patuh Syariah?", answer: "Skim Pintar ialah derma (sadaqah) ke dana pembinaan masjid — bukan insurans. Tiada akad bay'. Masjid menyediakan urusan jenazah sebagai budi bicara kepada penderma tetap. Sepenuhnya patuh Syariah, beroperasi selama 18 tahun." },
+        { question: "Apa yang berlaku jika saya terlepas pembayaran?", answer: "Anda akan menerima peringatan WhatsApp jika pembayaran terlepas. Anda ada tempoh tangguh sebelum liputan dijeda. Selepas 3 pembayaran berturut-terturut terlepas, liputan digantung — tetapi anda akan menerima beberapa amaran terlebih dahulu. Tiada lagi pembatalan senyap." },
+        { question: "Berapa cepat liputan bermula?", answer: "Liputan diaktifkan serta-merta selepas pembayaran PayNow pertama anda berjaya — biasanya dalam beberapa minit. Sebelum ini, GIRO mengambil 21–30 hari bekerja. Sistem baharu menghapuskan tunggu itu sepenuhnya." },
+        { question: "Siapa yang boleh saya tambah sebagai tanggungan untuk Pintar Plus?", answer: "Anda boleh tambah pasangan, anak, adik-beradik, ibu bapa dan mentua. Keluarga alamat sama (Seksyen A) dan yang di alamat berbeza (Seksyen B, sehingga 10 entri). Anda perlukan nama penuh (mengikut NRIC) dan tarikh lahir mereka." },
+        { question: "Boleh saya bayar lebih daripada minimum?", answer: "Ya. Minimum untuk Pintar Plus ialah $20/bulan, tetapi anda dialu-alukan untuk menderma $30, $50, atau sebarang jumlah. Sebarang jumlah melebihi minimum ialah sadaqah tambahan ke dana masjid. Manfaat tetap sama." },
+        { question: "Adakah data saya selamat? Bagaimana dengan PDPA?", answer: "Data peribadi anda dilindungi di bawah PDPA Singapura. Lembaga Pentadbir Masjid Ar-Raudhah ialah pengawal data. Data digunakan semata-mata untuk pentadbiran keahlian. Anda boleh meminta akses atau pembetulan pada bila-bila masa." },
       ],
     },
     // Footer
     footer: {
       lpmName: "Lembaga Pentadbir Masjid Ar-Raudhah",
-      addressTel:
-        "30 Bukit Batok East Ave 2, Singapura 659919 · Tel: 6899 5840",
+      addressTel: "30 Bukit Batok East Ave 2, Singapura 659919 · Tel: 6899 5840",
       privacyPolicy: "Dasar Privasi",
       pdpaNotice: "Notis PDPA",
       contact: "Hubungi",
@@ -735,8 +632,7 @@ export const translations = {
     // Payment setup
     payment: {
       title: "Sediakan Pembayaran",
-      subtitle:
-        "Pilih kaedah pembayaran pilihan anda untuk mengaktifkan keahlian anda.",
+      subtitle: "Pilih kaedah pembayaran pilihan anda untuk mengaktifkan keahlian anda.",
       paynow: "PayNow",
       paynowDesc:
         "Imbas kod QR di bawah dengan mana-mana aplikasi perbankan Singapura untuk membuat pembayaran sekarang atau berulang.",
@@ -745,8 +641,7 @@ export const translations = {
         "Sediakan potongan automatik bulanan. Bank anda akan memproses mandat dalam tempoh 3–5 hari bekerja.",
       amount: "Jumlah Bulanan",
       reference: "Rujukan",
-      scanInstructions:
-        "Imbas dengan DBS, OCBC, UOB, POSB atau mana-mana aplikasi PayNow",
+      scanInstructions: "Imbas dengan DBS, OCBC, UOB, POSB atau mana-mana aplikasi PayNow",
       confirm: "Saya Telah Bayar via PayNow",
       confirming: "Mengesahkan…",
       bankName: "Nama Bank *",
@@ -759,8 +654,7 @@ export const translations = {
       giroMessage: "Potongan bulanan anda akan bermula pada 1 haribulan depan.",
       paymentSuccess: "Pembayaran disahkan! Keahlian anda kini aktif.",
       membershipId: "ID Keahlian",
-      selectTierFirst:
-        "Sila pilih pelan keahlian sebelum menyediakan pembayaran.",
+      selectTierFirst: "Sila pilih pelan keahlian sebelum menyediakan pembayaran.",
       noTierSelected: "Tiada Pelan Dipilih",
       selectTierCta: "Pilih Pelan →",
       progressStep1: "Akaun Dicipta",
@@ -773,9 +667,43 @@ export const translations = {
       selectMonth: "Bulan",
       selectYear: "Tahun",
       generateQR: "Jana kod QR",
-      alreadyPaidForPeriod:
-        "Anda telah membayar untuk bulan ini. Sila pilih tempoh lain.",
+      alreadyPaidForPeriod: "Anda telah membayar yuran langganan bulan ini. Anda boleh membuat derma tambahan.",
       period: "Tempoh",
+      // Donation
+      donationTitle: "Derma Tambahan",
+      donationDesc: "Anda telah membayar yuran bulanan. Buat derma tambahan untuk menyokong Masjid Ar-Raudhah.",
+      donationAmount: "Jumlah Derma (SGD) *",
+      donationAmountPlaceholder: "cth. 10.00",
+      donationTab: "Derma",
+      subscriptionTab: "Yuran Bulanan",
+      donateBtn: "Derma",
+      // Payment type labels
+      categorySubscription: "Langganan",
+      categoryDonation: "Derma",
+      paymentTypeColumn: "Jenis",
+      // Monthly status indicator
+      monthlyPaidTitle: "Yuran Bulan Ini",
+      monthlyPaid: "Dibayar ✓",
+      monthlyUnpaid: "Belum Dibayar",
+      monthlyDaysLeft: (days: number) => days === 0 ? "Tarikh akhir hari ini!" : `${days} hari lagi`,
+      giroWillDeduct: "GIRO akan potong automatik",
+      giroSchedule: "GIRO potong pada 15hb (cuba semula 30hb)",
+      failedMonths: (n: number) => `${n}/3 bulan gagal`,
+      deactivatedWarning: "Langganan dinyahaktifkan selepas 3 gagal bayar. Sila aktifkan semula pelan anda.",
+      // GIRO in profile
+      giroSection: "GIRO Potongan Auto",
+      giroRegistered: "GIRO Didaftarkan",
+      giroNotRegistered: "Tiada GIRO ditetapkan",
+      giroBank: "Bank",
+      giroAccount: "Akaun",
+      giroMandate: "Ref Mandat",
+      giroStatus: "Status",
+      giroStatuses: { ACTIVE: "Aktif", PENDING_MANDATE: "Menunggu Pengesahan Bank", CANCELLED: "Dibatalkan" },
+      registerGiro: "Daftar GIRO",
+      cancelGiro: "Batalkan GIRO",
+      giroRegisteredSuccess: "Mandat GIRO berjaya didaftarkan!",
+      giroCancelConfirm: "Batalkan mandat GIRO anda?",
+      simulateCycle: "Simulasikan Kitaran GIRO",
     },
     // Dashboard
     dashboard: {
@@ -795,7 +723,7 @@ export const translations = {
       selectTier: "Pilih Pelan untuk Mengaktifkan",
       dependants: "Ahli Keluarga",
       noDependants: "Tiada ahli keluarga ditambah lagi.",
-      addDependant: "Tambah Ahli Keluarga",
+      addDependant: "+ Tambah Ahli Keluarga",
       edit: "Sunting",
       remove: "Padam",
       confirmRemove: "Padam tanggungan ini?",
@@ -809,7 +737,7 @@ export const translations = {
       paymentStatus: "Status",
       paymentAmount: "Jumlah",
       paymentDate: "Tarikh",
-      statuses2: {
+      paymentTypeColumn: "Jenis",
         PENDING: "Menunggu",
         COMPLETED: "Selesai",
         FAILED: "Gagal",
@@ -848,6 +776,6 @@ export const translations = {
       back: "Kembali",
     },
   },
-} as const;
+} as const
 
-export type Translations = (typeof translations)["en"];
+export type Translations = typeof translations["en"]
