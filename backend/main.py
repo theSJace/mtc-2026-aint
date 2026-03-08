@@ -5,8 +5,8 @@ FastAPI Backend
 Handles: authentication, user management, dependent management,
 membership tiers, PayNow QR generation, and GIRO setup.
 
-In production, replace the in-memory `_db` dicts with Convex HTTP calls
-(or keep FastAPI as an intermediary service alongside Convex).
+Data is persisted to a JSON file so it survives server restarts (e.g. uvicorn --reload).
+In production, replace with Convex or another database.
 """
 
 from fastapi import FastAPI, HTTPException, Depends, status
@@ -15,8 +15,12 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 import bcrypt
 import uuid
+import json
+import os
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from enum import Enum
 
 from models import (
     RegisterRequest,
@@ -38,7 +42,6 @@ from models import (
 # ─────────────────────────────────────────────
 # Config
 # ─────────────────────────────────────────────
-import os
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -48,13 +51,69 @@ ACCESS_TOKEN_EXPIRE_HOURS = 24
 MOSQUE_PAYNOW_UEN = os.getenv("MOSQUE_PAYNOW_UEN", "T08CC4132K")
 
 # ─────────────────────────────────────────────
-# In-Memory Database  (replace with Convex in production)
+# Persistent store (JSON file; survives restarts)
 # ─────────────────────────────────────────────
+_DATA_DIR = Path(__file__).resolve().parent / "data"
+_DATA_FILE = _DATA_DIR / "store.json"
+
 _users: dict[str, dict] = {}          # user_id -> user_doc
 _users_by_nric: dict[str, str] = {}   # nric -> user_id
 _users_by_email: dict[str, str] = {}  # email -> user_id
 _dependents: dict[str, dict] = {}     # dep_id -> dep_doc
 _payments: dict[str, dict] = {}       # payment_id -> payment_doc
+
+
+def _serialize_user(u: dict) -> dict:
+    """Copy user dict with enum converted to string for JSON."""
+    out = dict(u)
+    if "membership_status" in out and isinstance(out["membership_status"], Enum):
+        out["membership_status"] = out["membership_status"].value
+    return out
+
+
+def _load_data() -> None:
+    """Load users, dependents, payments from disk. Rebuild index dicts."""
+    if not _DATA_FILE.exists():
+        return
+    try:
+        with open(_DATA_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return
+    users_raw = data.get("users") or {}
+    for uid, u in users_raw.items():
+        if isinstance(u.get("membership_status"), str) and u["membership_status"] in [e.value for e in MembershipStatus]:
+            u["membership_status"] = MembershipStatus(u["membership_status"])
+        _users[uid] = u
+    for uid, u in _users.items():
+        nric = u.get("nric")
+        email = u.get("email")
+        if nric:
+            _users_by_nric[nric] = uid
+        if email:
+            _users_by_email[email.lower()] = uid
+    _dependents.clear()
+    for did, d in (data.get("dependents") or {}).items():
+        _dependents[did] = d
+    _payments.clear()
+    for pid, p in (data.get("payments") or {}).items():
+        _payments[pid] = p
+
+
+def _save_data() -> None:
+    """Persist users, dependents, payments to disk."""
+    _DATA_DIR.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "users": {k: _serialize_user(v) for k, v in _users.items()},
+        "dependents": _dependents,
+        "payments": _payments,
+    }
+    with open(_DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, ensure_ascii=False)
+
+
+_load_data()
+
 
 def _get_user_dependents(user_id: str) -> list[dict]:
     return [d for d in _dependents.values() if d["user_id"] == user_id]
@@ -211,6 +270,7 @@ async def register(body: RegisterRequest):
             "created_at": now,
         }
 
+    _save_data()
     token = create_access_token(user_id)
     return LoginResponse(
         access_token=token,
@@ -244,6 +304,7 @@ async def update_language(body: dict, user: dict = Depends(get_current_user)):
     if lang not in ("en", "ms"):
         raise HTTPException(status_code=400, detail="Language must be 'en' or 'ms'")
     _users[user["id"]]["preferred_language"] = lang
+    _save_data()
     return {"ok": True}
 
 # ─────────────────────────────────────────────
@@ -276,6 +337,7 @@ async def add_dependent(body: DependentIn, user: dict = Depends(get_current_user
         "created_at": now,
     }
     _dependents[dep_id] = dep_doc
+    _save_data()
     return _dep_to_out(dep_doc)
 
 
@@ -294,6 +356,7 @@ async def update_dependent(dep_id: str, body: DependentIn, user: dict = Depends(
         "address": body.address if not body.same_address else user["address"],
         "nric": body.nric or dep.get("nric", ""),
     })
+    _save_data()
     return _dep_to_out(dep)
 
 
@@ -304,6 +367,8 @@ async def remove_dependent(dep_id: str, user: dict = Depends(get_current_user)):
     if _dependents[dep_id]["user_id"] != user["id"]:
         raise HTTPException(status_code=403, detail="Not your dependent")
     del _dependents[dep_id]
+    _save_data()
+    return None
 
 # ─────────────────────────────────────────────
 # Membership
@@ -316,6 +381,7 @@ async def select_tier(body: SelectTierRequest, user: dict = Depends(get_current_
         raise HTTPException(status_code=400, detail="Invalid tier. Choose 'PINTAR' or 'PINTAR_PLUS'")
     _users[user["id"]]["membership_status"] = body.tier
     _users[user["id"]]["updated_at"] = datetime.now(timezone.utc).isoformat()
+    _save_data()
     return {
         "ok": True,
         "tier": body.tier,
@@ -326,15 +392,35 @@ async def select_tier(body: SelectTierRequest, user: dict = Depends(get_current_
 # ─────────────────────────────────────────────
 # Payments
 # ─────────────────────────────────────────────
+def _user_has_paid_for_period(user_id: str, period_month: int, period_year: int) -> bool:
+    """True if user has a COMPLETED payment for this month/year."""
+    for p in _payments.values():
+        if p["user_id"] != user_id or p.get("status") != "COMPLETED":
+            continue
+        if p.get("period_month") == period_month and p.get("period_year") == period_year:
+            return True
+    return False
+
+
 @app.post("/api/payments/paynow", response_model=PayNowResponse)
 async def generate_paynow(body: PayNowRequest, user: dict = Depends(get_current_user)):
     tier = user["membership_status"]
     if tier == MembershipStatus.NOT_REGISTERED:
         raise HTTPException(status_code=400, detail="Please select a membership tier first.")
+    period_month = body.period_month
+    period_year = body.period_year
+    if not (1 <= period_month <= 12):
+        raise HTTPException(status_code=400, detail="Invalid month.")
+    if period_year < 2020 or period_year > 2100:
+        raise HTTPException(status_code=400, detail="Invalid year.")
+    if _user_has_paid_for_period(user["id"], period_month, period_year):
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "ALREADY_PAID", "message": "You have already paid for this month. Please select another period."},
+        )
     amount = body.amount or TIER_AMOUNTS.get(tier, 5.0)
     membership_id = user["membership_id"]
     qr_data = generate_paynow_qr_data(membership_id, amount)
-    # Record pending payment
     payment_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     _payments[payment_id] = {
@@ -346,7 +432,10 @@ async def generate_paynow(body: PayNowRequest, user: dict = Depends(get_current_
         "reference": membership_id,
         "qr_data": qr_data,
         "created_at": now,
+        "period_month": period_month,
+        "period_year": period_year,
     }
+    _save_data()
     return PayNowResponse(
         qr_data=qr_data,
         reference=membership_id,
@@ -376,6 +465,7 @@ async def setup_giro(body: GiroRequest, user: dict = Depends(get_current_user)):
         "account_last4": body.account_number[-4:] if body.account_number else "****",
         "created_at": now,
     }
+    _save_data()
     return GiroResponse(
         payment_id=payment_id,
         reference=membership_id,
@@ -404,6 +494,7 @@ async def confirm_payment(payment_id: str, user: dict = Depends(get_current_user
     tier = _users[user["id"]]["membership_status"]
     if tier in (MembershipStatus.PINTAR, MembershipStatus.PINTAR_PLUS):
         _users[user["id"]]["membership_active"] = True
+    _save_data()
     return {"ok": True, "status": "COMPLETED"}
 
 
@@ -453,6 +544,8 @@ def _payment_to_out(p: dict) -> "PaymentOut":
         status=p["status"],
         reference=p["reference"],
         created_at=p["created_at"],
+        period_month=p.get("period_month"),
+        period_year=p.get("period_year"),
     )
 
 # ─────────────────────────────────────────────

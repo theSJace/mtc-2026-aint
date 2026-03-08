@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { QRCodeSVG } from "qrcode.react"
-import { CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,7 +11,12 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useLanguage } from "@/contexts/LanguageContext"
 
 const BANK_OPTIONS = ["DBS/POSB", "OCBC", "UOB", "Standard Chartered", "Citibank", "HSBC", "Maybank"]
+const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 type PayMethod = "PAYNOW" | "GIRO"
+
+const now = new Date()
+const currentYear = now.getFullYear()
+const currentMonth = now.getMonth() + 1
 
 export function PaymentSetup() {
   const navigate = useNavigate()
@@ -20,6 +24,8 @@ export function PaymentSetup() {
   const { t } = useLanguage()
 
   const [method, setMethod] = useState<PayMethod>("PAYNOW")
+  const [periodMonth, setPeriodMonth] = useState(currentMonth)
+  const [periodYear, setPeriodYear] = useState(currentYear)
   const [paynow, setPaynow] = useState<PayNowResponse | null>(null)
   const [giroResult, setGiroResult] = useState<GiroResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -32,21 +38,27 @@ export function PaymentSetup() {
   const [accountNumber, setAccountNumber] = useState("")
   const [accountHolder, setAccountHolder] = useState(user?.full_name ?? "")
 
-  useEffect(() => {
-    // Auto-generate PayNow QR on mount
-    if (user?.membership_status !== "NOT_REGISTERED") {
-      generatePayNow()
-    }
-  }, [])
-
   const generatePayNow = async () => {
     setIsLoading(true)
     setError(null)
+    setPaynow(null)
     try {
-      const res = await paymentsApi.generatePayNow()
+      const res = await paymentsApi.generatePayNow({
+        period_month: periodMonth,
+        period_year: periodYear,
+        amount: user?.membership_status === "PINTAR_PLUS" ? 20 : 5,
+      })
       setPaynow(res)
     } catch (err: any) {
-      setError(err?.detail?.message ?? t.common.error)
+      const body = err?.detail
+      const payload = typeof body === "object" && body?.detail ? body.detail : body
+      const msg =
+        typeof payload === "object" && payload?.code === "ALREADY_PAID"
+          ? (payload?.message ?? t.payment.alreadyPaidForPeriod)
+          : typeof payload === "object" && payload?.message
+            ? payload.message
+            : t.common.error
+      setError(msg)
     } finally {
       setIsLoading(false)
     }
@@ -56,8 +68,10 @@ export function PaymentSetup() {
     if (!paynow) return
     setIsConfirming(true)
     setError(null)
+    const paymentIdToConfirm = paynow.payment_id
     try {
-      await paymentsApi.confirm(paynow.payment_id)
+      await paymentsApi.confirm(paymentIdToConfirm)
+      setPaynow(null)
       setConfirmed(true)
       if (user) refreshUser({ ...user })
     } catch (err: any) {
@@ -126,9 +140,9 @@ export function PaymentSetup() {
       <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4">
         <div className="text-center max-w-sm">
           <div className="text-4xl mb-4">⚠️</div>
-          <h2 className="font-playfair text-2xl text-green-deep mb-3">No Tier Selected</h2>
-          <p className="text-text-mid text-sm mb-6">Please select a membership tier before setting up payment.</p>
-          <Button onClick={() => navigate("/select-tier")} className="rounded-xl">Select a Tier →</Button>
+          <h2 className="font-playfair text-2xl text-green-deep mb-3">{t.payment.noTierSelected}</h2>
+          <p className="text-text-mid text-sm mb-6">{t.payment.selectTierFirst}</p>
+          <Button onClick={() => navigate("/select-tier")} className="rounded-xl">{t.payment.selectTierCta}</Button>
         </div>
       </div>
     )
@@ -139,8 +153,8 @@ export function PaymentSetup() {
       {/* Progress */}
       <div className="w-full max-w-[600px] mb-8 mt-4">
         <div className="flex items-center gap-2">
-          {["Account Created", "Tier Selected", "Payment Setup", "Active"].map((step, i) => (
-            <div key={step} className="flex items-center gap-2 flex-1">
+          {[t.payment.progressStep1, t.payment.progressStep2, t.payment.progressStep3, t.payment.progressStep4].map((step, i) => (
+            <div key={i} className="flex items-center gap-2 flex-1">
               <div className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold flex-shrink-0 ${i < 2 ? "bg-green-soft text-white" : i === 2 ? "bg-green-deep text-white" : "bg-green-pale text-text-light"}`}>
                 {i < 2 ? "✓" : i + 1}
               </div>
@@ -160,7 +174,7 @@ export function PaymentSetup() {
         {/* Membership summary */}
         <div className="bg-white rounded-2xl border border-green-pale px-6 py-4 mb-6 flex items-center justify-between">
           <div>
-            <div className="text-xs text-text-light mb-1">{tierLabel} Membership</div>
+            <div className="text-xs text-text-light mb-1">{tierLabel} {t.payment.membership}</div>
             <div className="font-playfair text-2xl text-green-deep font-bold">${amount}<span className="text-sm font-normal text-text-light">/month</span></div>
           </div>
           <div className="text-3xl">🕌</div>
@@ -182,7 +196,7 @@ export function PaymentSetup() {
                 method === m ? "border-green-deep bg-green-deep text-white" : "border-green-pale text-green-deep hover:border-green-soft"
               )}
             >
-              {m === "PAYNOW" ? `📲 ${t.payment.paynow}` : `🏦 GIRO`}
+              {m === "PAYNOW" ? `📲 ${t.payment.paynow}` : `🏦 ${t.payment.giroShort}`}
             </button>
           ))}
         </div>
@@ -196,12 +210,55 @@ export function PaymentSetup() {
             <CardContent className="flex flex-col items-center gap-5">
               <p className="text-sm text-text-mid text-center">{t.payment.paynowDesc}</p>
 
-              {isLoading ? (
-                <div className="w-[220px] h-[220px] bg-green-pale/50 rounded-xl flex items-center justify-center">
-                  <span className="text-text-light text-sm animate-pulse">{t.common.loading}</span>
-                </div>
-              ) : paynow ? (
+              {!paynow ? (
                 <>
+                  <div className="w-full grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <Label>{t.payment.selectMonth}</Label>
+                      <select
+                        className="flex h-12 w-full rounded-lg border border-green-deep/20 bg-cream-dark px-4 text-sm text-text-dark focus:outline-none focus:ring-2 focus:ring-green-mid"
+                        value={periodMonth}
+                        onChange={(e) => { setPeriodMonth(Number(e.target.value)); setError(null); setPaynow(null) }}
+                      >
+                        {MONTHS.map((m) => (
+                          <option key={m} value={m}>
+                            {new Date(2000, m - 1).toLocaleString("default", { month: "long" })}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <Label>{t.payment.selectYear}</Label>
+                      <select
+                        className="flex h-12 w-full rounded-lg border border-green-deep/20 bg-cream-dark px-4 text-sm text-text-dark focus:outline-none focus:ring-2 focus:ring-green-mid"
+                        value={periodYear}
+                        onChange={(e) => { setPeriodYear(Number(e.target.value)); setError(null); setPaynow(null) }}
+                      >
+                        {[currentYear - 1, currentYear, currentYear + 1].map((y) => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  {error && (
+                    <div className="w-full rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+                      {error}
+                    </div>
+                  )}
+                  <Button
+                    onClick={generatePayNow}
+                    disabled={isLoading}
+                    variant="secondary"
+                    className="border border-green-deep/30 rounded-xl w-full"
+                  >
+                    {isLoading ? t.common.loading : t.payment.generateQR}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="w-full rounded-lg bg-green-pale/50 border border-green-deep/20 px-3 py-2 text-sm text-green-deep text-center">
+                    {t.payment.payForPeriod}: {new Date(periodYear, periodMonth - 1).toLocaleString("default", { month: "long" })} {periodYear}
+                  </div>
                   <div className="bg-white p-4 rounded-2xl border border-gold/20 shadow-sm">
                     <QRCodeSVG value={paynow.qr_data} size={200} level="M" includeMargin={false} />
                   </div>
@@ -228,10 +285,6 @@ export function PaymentSetup() {
                     {isConfirming ? t.payment.confirming : t.payment.confirm}
                   </Button>
                 </>
-              ) : (
-                <Button onClick={generatePayNow} variant="secondary" className="border border-green-deep/30 rounded-xl">
-                  Generate QR Code
-                </Button>
               )}
             </CardContent>
           </Card>

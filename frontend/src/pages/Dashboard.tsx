@@ -31,7 +31,7 @@ function emptyForm(): DependantForm {
 
 export function Dashboard() {
   const navigate = useNavigate()
-  const { user, logout, refreshUser } = useAuth()
+  const { user, logout } = useAuth()
   const { t } = useLanguage()
 
   const [tab, setTab] = useState<Tab>("overview")
@@ -125,7 +125,7 @@ export function Dashboard() {
       setShowForm(false)
     } catch (err: any) {
       const code = err?.detail?.code
-      if (code === "NRIC_IS_PRIMARY") setFormError("This NRIC already has a primary account.")
+      if (code === "NRIC_IS_PRIMARY") setFormError(t.dashboard.nricPrimaryAccount)
       else setFormError(err?.detail?.message ?? t.common.error)
     } finally {
       setFormSubmitting(false)
@@ -334,11 +334,11 @@ export function Dashboard() {
                         <div className="min-w-0">
                           <div className="font-semibold text-green-deep text-sm truncate">{dep.full_name}</div>
                           <div className="text-xs text-text-light mt-0.5">
-                            {dep.relationship} · Born {new Date(dep.date_of_birth).toLocaleDateString("en-SG")}
+                            {t.signUp.relationshipLabels[dep.relationship as keyof typeof t.signUp.relationshipLabels] ?? dep.relationship} · Born {new Date(dep.date_of_birth).toLocaleDateString("en-SG")}
                           </div>
                           {dep.nric && <div className="text-xs text-text-light font-mono mt-0.5">{dep.nric}</div>}
                           <div className="text-xs text-text-light mt-0.5">
-                            {dep.same_address ? "Same address" : dep.address}
+                            {dep.same_address ? t.dashboard.sameAddressLabel : dep.address}
                           </div>
                         </div>
                       </div>
@@ -377,9 +377,9 @@ export function Dashboard() {
                 <div className="bg-amber-50 rounded-2xl border border-amber-200 px-5 py-4 flex gap-3 items-center">
                   <span className="text-2xl">⚠️</span>
                   <div>
-                    <div className="text-sm font-medium text-amber-900">No active membership</div>
+                    <div className="text-sm font-medium text-amber-900">{t.dashboard.noActiveMembership}</div>
                     <div className="text-xs text-amber-700 mt-0.5">
-                      <Link to="/select-tier" className="underline">{t.dashboard.selectTier}</Link> to start making payments.
+                      <Link to="/select-tier" className="underline">{t.dashboard.selectTier}</Link>{t.dashboard.selectTierToPay}
                     </div>
                   </div>
                 </div>
@@ -397,6 +397,7 @@ export function Dashboard() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-cream border-b border-green-pale">
+                        <th className="px-5 py-3 text-left text-xs font-semibold text-text-light uppercase tracking-wider">{t.payment.period}</th>
                         <th className="px-5 py-3 text-left text-xs font-semibold text-text-light uppercase tracking-wider">{t.dashboard.paymentDate}</th>
                         <th className="px-5 py-3 text-left text-xs font-semibold text-text-light uppercase tracking-wider">{t.dashboard.paymentType}</th>
                         <th className="px-5 py-3 text-left text-xs font-semibold text-text-light uppercase tracking-wider">{t.dashboard.paymentAmount}</th>
@@ -411,8 +412,13 @@ export function Dashboard() {
                           FAILED: { color: "bg-red-100 text-red-700", label: t.dashboard.statuses2.FAILED },
                         }
                         const s = statusMap[p.status] ?? statusMap.PENDING
+                        const periodLabel =
+                          p.period_month != null && p.period_year != null
+                            ? new Date(p.period_year, (p.period_month ?? 1) - 1).toLocaleString("default", { month: "short" }) + " " + p.period_year
+                            : "—"
                         return (
                           <tr key={p.id} className="hover:bg-cream/50 transition-colors">
+                            <td className="px-5 py-3.5 text-text-mid">{periodLabel}</td>
                             <td className="px-5 py-3.5 text-text-mid">{new Date(p.created_at).toLocaleDateString("en-SG")}</td>
                             <td className="px-5 py-3.5 font-mono text-xs text-text-dark">{p.payment_type}</td>
                             <td className="px-5 py-3.5 font-semibold text-green-deep">${p.amount.toFixed(2)}</td>
@@ -434,7 +440,7 @@ export function Dashboard() {
             <div className="flex flex-col gap-5">
               <div>
                 <h2 className="font-playfair text-2xl text-green-deep">{t.dashboard.profile}</h2>
-                <p className="text-xs text-text-light mt-0.5">Your personal details and account info</p>
+                <p className="text-xs text-text-light mt-0.5">{t.dashboard.profileSubtitle}</p>
               </div>
               <div className="bg-white rounded-2xl border border-green-pale p-6 flex flex-col gap-4">
                 <div className="flex items-center gap-4 pb-4 border-b border-green-pale/50">
@@ -456,7 +462,7 @@ export function Dashboard() {
                     { label: t.dashboard.email, value: user.email },
                     { label: t.dashboard.memberId, value: user.membership_id ?? "—" },
                     { label: t.dashboard.address, value: user.address + (user.postal_code ? ` S(${user.postal_code})` : "") },
-                    { label: "Date of Birth", value: user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString("en-SG") : "—" },
+                    { label: t.dashboard.dob, value: user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString("en-SG") : "—" },
                   ].map(({ label, value }) => (
                     <div key={label}>
                       <div className="text-[11px] text-text-light uppercase tracking-wide mb-1">{label}</div>
@@ -467,7 +473,7 @@ export function Dashboard() {
               </div>
 
               <div className="bg-white rounded-2xl border border-green-pale p-5">
-                <h3 className="text-sm font-semibold text-green-deep mb-4">Language Preference</h3>
+                <h3 className="text-sm font-semibold text-green-deep mb-4">{t.dashboard.languagePreference}</h3>
                 <LanguageToggle />
               </div>
 
@@ -507,7 +513,7 @@ export function Dashboard() {
           <Card className="w-full max-w-[480px] rounded-2xl border border-gold/20 shadow-2xl bg-cream max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <CardHeader className="pb-2 sticky top-0 bg-cream z-10 border-b border-green-pale/50">
               <CardTitle className="text-lg font-playfair text-green-deep">
-                {editingId ? t.dashboard.edit + " Family Member" : t.dashboard.addDependant}
+                {editingId ? t.dashboard.edit + t.dashboard.editFamilyMember : t.dashboard.addDependant}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
@@ -533,7 +539,7 @@ export function Dashboard() {
                     disabled={formSubmitting}
                   >
                     <option value="">{t.signUp.selectRelationship}</option>
-                    {RELATIONSHIP_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                    {RELATIONSHIP_OPTIONS.map((opt) => <option key={opt} value={opt}>{t.signUp.relationshipLabels[opt]}</option>)}
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">

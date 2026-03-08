@@ -30,6 +30,15 @@ async function request<T>(
     } catch {
       detail = { message: res.statusText }
     }
+    // On 401 (invalid/expired token), clear auth and redirect to sign-in so user can log in again
+    if (res.status === 401) {
+      localStorage.removeItem("sp_token")
+      localStorage.removeItem("sp_user")
+      const signInPath = "/sign-in?session_expired=1"
+      if (typeof window !== "undefined" && window.location.pathname !== "/sign-in") {
+        window.location.href = signInPath
+      }
+    }
     throw { status: res.status, detail }
   }
   if (res.status === 204) return undefined as T
@@ -164,13 +173,15 @@ export interface Payment {
   status: string
   reference: string
   created_at: string
+  period_month?: number | null
+  period_year?: number | null
 }
 
 export const payments = {
-  generatePayNow: (amount?: number) =>
+  generatePayNow: (params: { amount?: number; period_month: number; period_year: number }) =>
     request<PayNowResponse>("/api/payments/paynow", {
       method: "POST",
-      body: JSON.stringify({ amount }),
+      body: JSON.stringify(params),
     }),
   setupGiro: (payload: GiroPayload) =>
     request<GiroResponse>("/api/payments/giro", {

@@ -2,7 +2,6 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   useCallback,
   type ReactNode,
 } from "react"
@@ -49,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null
     }
   })
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading] = useState(false)
 
   const login = useCallback((tok: string, u: UserProfile) => {
     localStorage.setItem(TOKEN_KEY, tok)

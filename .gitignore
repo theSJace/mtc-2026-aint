@@ -54,3 +54,5 @@ backend/htmlcov/
 backend/*.log
 backend/.env
 backend/.env.*
+# Persistent JSON store (dev data; do not commit)
+backend/data/

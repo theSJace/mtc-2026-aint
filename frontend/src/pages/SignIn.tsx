@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import { QRCodeSVG } from "qrcode.react"
 import { Button } from "@/components/ui/button"
@@ -7,24 +7,26 @@ import { SingpassButton } from "@/components/SingpassButton"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { LanguageToggle } from "@/components/LanguageToggle"
 import { cn } from "@/lib/utils"
 import { fetchMyInfoAfterSingpassAuth } from "@/lib/singpass"
 import { auth as apiAuth } from "@/lib/api"
 import { useAuth } from "@/contexts/AuthContext"
 import { useLanguage } from "@/contexts/LanguageContext"
 
-type SignInError = "account" | "password" | "server"
 type SingpassStep = "idle" | "scan"
 
 export function SignIn() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const sessionExpired = searchParams.get("session_expired") === "1"
   const { login } = useAuth()
   const { t } = useLanguage()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [capsLock, setCapsLock] = useState(false)
-  const [error, setError] = useState<SignInError | null>(null)
+  const [serverErrorMessage, setServerErrorMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [singpassStep, setSingpassStep] = useState<SingpassStep>("idle")
   const [singpassScanning, setSingpassScanning] = useState(false)
@@ -41,18 +43,24 @@ export function SignIn() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
+    setServerErrorMessage(null)
     if (!email.trim() || !password) return
     setIsSubmitting(true)
     try {
       const res = await apiAuth.login({ email: email.trim(), password })
       login(res.access_token, res.user)
       navigate("/dashboard")
-    } catch (err: any) {
-      const code = err?.detail?.code
-      if (code === "NO_ACCOUNT") setError("account")
-      else if (code === "WRONG_PASSWORD") setError("password")
-      else setError("server")
+    } catch (err: unknown) {
+      // API throws { status, detail } where detail = response body; FastAPI puts payload in body.detail
+      const body = err && typeof err === "object" && "detail" in err ? (err as { detail?: unknown }).detail : undefined
+      const payload = typeof body === "object" && body !== null && "detail" in body ? (body as { detail?: unknown }).detail : body
+      const message =
+        typeof payload === "object" && payload !== null && "message" in payload && typeof (payload as { message?: string }).message === "string"
+          ? (payload as { message: string }).message
+          : typeof payload === "string"
+            ? payload
+            : t.common.error
+      setServerErrorMessage(message)
     } finally {
       setIsSubmitting(false)
     }
@@ -79,7 +87,7 @@ export function SignIn() {
   if (singpassStep === "scan") {
     return (
       <div className="min-h-screen bg-cream flex flex-col items-center pt-[80px] pb-12 px-4">
-        <div className="w-full max-w-[440px] flex flex-col gap-2">
+        <div className="w-full max-w-[440px] flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={handleSingpassBack}
@@ -88,6 +96,7 @@ export function SignIn() {
             <ArrowLeft className="w-4 h-4" />
             {t.signIn.back}
           </button>
+          <LanguageToggle />
         </div>
 
         <Card className="w-full max-w-[440px] mt-6 rounded-xl border border-gold/20 shadow-lg shadow-green-deep/10">
@@ -145,12 +154,19 @@ export function SignIn() {
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center pt-[80px] pb-12 px-4">
-      <div className="w-full max-w-[440px] flex flex-col gap-2">
+      <div className="w-full max-w-[440px] flex items-center justify-between gap-2">
         <Link to="/" className="flex items-center gap-2 text-sm text-text-mid hover:text-green-deep w-fit">
           <ArrowLeft className="w-4 h-4" />
           {t.signIn.back}
         </Link>
+        <LanguageToggle />
       </div>
+
+      {sessionExpired && (
+        <div className="w-full max-w-[440px] mt-4 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+          {t.signIn.sessionExpired}
+        </div>
+      )}
 
       <Card className="w-full max-w-[440px] mt-6 rounded-xl border border-gold/20 shadow-lg shadow-green-deep/10">
         <CardHeader className="pb-2">
@@ -187,9 +203,9 @@ export function SignIn() {
               {capsLock && <p className="text-xs text-[#E07B54]">{t.signIn.capsLock}</p>}
             </div>
 
-            {error && (
+            {serverErrorMessage && (
               <div className={cn("rounded-lg px-4 py-3 text-sm font-medium","bg-red-100 text-red-800 border border-red-200")} role="alert">
-                {error === "account" ? t.signIn.noAccount : error === "password" ? t.signIn.wrongPassword : t.common.error}
+                {serverErrorMessage}
               </div>
             )}
 
