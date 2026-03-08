@@ -397,6 +397,7 @@ export function Dashboard() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-cream border-b border-green-pale">
+                        <th className="px-5 py-3 text-left text-xs font-semibold text-text-light uppercase tracking-wider">{t.payment.period}</th>
                         <th className="px-5 py-3 text-left text-xs font-semibold text-text-light uppercase tracking-wider">{t.dashboard.paymentDate}</th>
                         <th className="px-5 py-3 text-left text-xs font-semibold text-text-light uppercase tracking-wider">{t.dashboard.paymentType}</th>
                         <th className="px-5 py-3 text-left text-xs font-semibold text-text-light uppercase tracking-wider">{t.dashboard.paymentAmount}</th>
@@ -411,8 +412,13 @@ export function Dashboard() {
                           FAILED: { color: "bg-red-100 text-red-700", label: t.dashboard.statuses2.FAILED },
                         }
                         const s = statusMap[p.status] ?? statusMap.PENDING
+                        const periodLabel =
+                          p.period_month != null && p.period_year != null
+                            ? new Date(p.period_year, (p.period_month ?? 1) - 1).toLocaleString("default", { month: "short" }) + " " + p.period_year
+                            : "—"
                         return (
                           <tr key={p.id} className="hover:bg-cream/50 transition-colors">
+                            <td className="px-5 py-3.5 text-text-mid">{periodLabel}</td>
                             <td className="px-5 py-3.5 text-text-mid">{new Date(p.created_at).toLocaleDateString("en-SG")}</td>
                             <td className="px-5 py-3.5 font-mono text-xs text-text-dark">{p.payment_type}</td>
                             <td className="px-5 py-3.5 font-semibold text-green-deep">${p.amount.toFixed(2)}</td>

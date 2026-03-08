@@ -113,6 +113,8 @@ class SelectTierRequest(BaseModel):
 # ─────────────────────────────────────────────
 class PayNowRequest(BaseModel):
     amount: Optional[float] = None  # If None, use tier default
+    period_month: int  # 1-12
+    period_year: int   # e.g. 2026
 
 
 class PayNowResponse(BaseModel):
@@ -147,6 +149,8 @@ class PaymentOut(BaseModel):
     status: str
     reference: str
     created_at: str
+    period_month: Optional[int] = None  # 1-12, for PAYNOW
+    period_year: Optional[int] = None   # e.g. 2026
 
 
 # ─────────────────────────────────────────────

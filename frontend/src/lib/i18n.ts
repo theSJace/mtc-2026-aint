@@ -178,6 +178,7 @@ export const translations = {
       sharingOk: "Are you okay with sharing this data?",
       okay: "Okay",
       notOkay: "Not okay",
+      sessionExpired: "Your session expired. Please sign in again.",
     },
     // Sign Up
     signUp: {
@@ -276,6 +277,12 @@ export const translations = {
       progressStep4: "Active",
       membership: "Membership",
       giroShort: "GIRO",
+      payForPeriod: "Pay for month",
+      selectMonth: "Month",
+      selectYear: "Year",
+      generateQR: "Generate QR code",
+      alreadyPaidForPeriod: "You have already paid for this month. Please select another period.",
+      period: "Period",
     },
     // Dashboard
     dashboard: {
@@ -521,6 +528,7 @@ export const translations = {
       sharingOk: "Adakah anda bersetuju untuk berkongsi data ini?",
       okay: "Setuju",
       notOkay: "Tidak Setuju",
+      sessionExpired: "Sesi anda telah tamat. Sila log masuk lagi.",
     },
     // Sign Up
     signUp: {
@@ -619,6 +627,12 @@ export const translations = {
       progressStep4: "Aktif",
       membership: "Keahlian",
       giroShort: "GIRO",
+      payForPeriod: "Bayar untuk bulan",
+      selectMonth: "Bulan",
+      selectYear: "Tahun",
+      generateQR: "Jana kod QR",
+      alreadyPaidForPeriod: "Anda telah membayar untuk bulan ini. Sila pilih tempoh lain.",
+      period: "Tempoh",
     },
     // Dashboard
     dashboard: {

@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import { QRCodeSVG } from "qrcode.react"
 import { Button } from "@/components/ui/button"
@@ -18,6 +18,8 @@ type SingpassStep = "idle" | "scan"
 
 export function SignIn() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const sessionExpired = searchParams.get("session_expired") === "1"
   const { login } = useAuth()
   const { t } = useLanguage()
 
@@ -159,6 +161,12 @@ export function SignIn() {
         </Link>
         <LanguageToggle />
       </div>
+
+      {sessionExpired && (
+        <div className="w-full max-w-[440px] mt-4 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+          {t.signIn.sessionExpired}
+        </div>
+      )}
 
       <Card className="w-full max-w-[440px] mt-6 rounded-xl border border-gold/20 shadow-lg shadow-green-deep/10">
         <CardHeader className="pb-2">
