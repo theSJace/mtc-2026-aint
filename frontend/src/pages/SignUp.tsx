@@ -110,17 +110,20 @@ export function SignUp() {
       })
       login(res.access_token, res.user)
       navigate("/select-tier")
-    } catch (err: any) {
-      const code = err?.detail?.code
-      if (code === "NRIC_IS_DEPENDENT") {
-        setServerError(`This NRIC is already registered as a dependant under another account (${err?.detail?.primary_email ?? ""}). Please contact mosque staff.`)
-      } else if (code === "NRIC_EXISTS") {
-        setServerError("An account with this NRIC already exists. Please sign in instead.")
-      } else if (code === "EMAIL_EXISTS") {
-        setServerError("This email is already registered. Please sign in.")
-      } else {
-        setServerError(err?.detail?.message ?? t.common.error)
-      }
+    } catch (err: unknown) {
+      // API throws { status, detail } where detail = response body; FastAPI puts payload in body.detail
+      const body = err && typeof err === "object" && "detail" in err ? (err as { detail?: unknown }).detail : undefined
+      const payload = typeof body === "object" && body !== null && "detail" in body ? (body as { detail?: unknown }).detail : body
+      const msg =
+        typeof payload === "object" && payload !== null && "message" in payload && typeof (payload as { message?: string }).message === "string"
+          ? (payload as { message: string }).message
+          : typeof payload === "string" ? payload : null
+      const primaryEmail =
+        typeof payload === "object" && payload !== null && "primary_email" in payload
+          ? (payload as { primary_email?: string }).primary_email
+          : undefined
+      const displayMessage = msg ? (primaryEmail ? `${msg} Contact: ${primaryEmail}.` : msg) : t.common.error
+      setServerError(displayMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -154,12 +157,6 @@ export function SignUp() {
           {fromSingPass && (
             <div className="rounded-lg bg-green-pale/60 border border-green-mid/30 px-5 py-4">
               <p className="text-sm text-green-deep font-medium">{t.signUp.prefilled}</p>
-            </div>
-          )}
-
-          {serverError && (
-            <div className="rounded-lg bg-red-50 border border-red-200 px-5 py-4">
-              <p className="text-sm text-red-800 font-medium">{serverError}</p>
             </div>
           )}
 
@@ -197,6 +194,12 @@ export function SignUp() {
                   />
                 </div>
               ))}
+
+              {serverError && (
+                <div className="rounded-lg bg-red-50 border border-red-200 px-5 py-4">
+                  <p className="text-sm text-red-800 font-medium">{serverError}</p>
+                </div>
+              )}
 
               {/* Password fields — always manual */}
               <div className="flex flex-col gap-1.5">
