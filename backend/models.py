@@ -1,5 +1,5 @@
 """Pydantic models for Skim Pintar API."""
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, field_validator
 from typing import Optional
 from enum import Enum
 
@@ -8,6 +8,11 @@ class MembershipStatus(str, Enum):
     NOT_REGISTERED = "NOT_REGISTERED"
     PINTAR = "PINTAR"
     PINTAR_PLUS = "PINTAR_PLUS"
+
+
+class PaymentCategory(str, Enum):
+    SUBSCRIPTION = "SUBSCRIPTION"   # monthly $5/$20 fee
+    DONATION = "DONATION"           # additional voluntary donation
 
 
 # ─────────────────────────────────────────────
@@ -55,6 +60,16 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class GiroInfo(BaseModel):
+    """GIRO mandate details stored on the user profile."""
+    bank_name: str
+    account_number_masked: str   # last 4 digits only
+    account_holder_name: str
+    mandate_ref: str
+    status: str                  # ACTIVE | PENDING_MANDATE | CANCELLED
+    registered_at: str
+
+
 class UserOut(BaseModel):
     id: str
     nric: str
@@ -69,6 +84,9 @@ class UserOut(BaseModel):
     email_verified: bool
     created_at: str
     preferred_language: str = "en"
+    giro: Optional[GiroInfo] = None
+    consecutive_failed_months: int = 0
+    is_deactivated: bool = False
 
 
 class LoginResponse(BaseModel):
@@ -112,7 +130,11 @@ class SelectTierRequest(BaseModel):
 # Payments
 # ─────────────────────────────────────────────
 class PayNowRequest(BaseModel):
-    amount: Optional[float] = None  # If None, use tier default
+    amount: Optional[float] = None   # If None, use tier default
+    period_month: int                # 1-12
+    period_year: int                 # e.g. 2026
+    # category defaults to SUBSCRIPTION; set to DONATION for additional donations
+    category: PaymentCategory = PaymentCategory.SUBSCRIPTION
 
 
 class PayNowResponse(BaseModel):
@@ -123,6 +145,22 @@ class PayNowResponse(BaseModel):
     uen: str
 
 
+class GiroRegisterRequest(BaseModel):
+    """Register or update GIRO mandate on the user profile."""
+    bank_name: str
+    account_number: str        # full number; we only store last 4
+    account_holder_name: str
+
+
+class GiroRegisterResponse(BaseModel):
+    mandate_ref: str
+    bank_name: str
+    account_number_masked: str
+    status: str
+    message: str
+
+
+# Legacy – kept for backwards compat with PaymentSetup page
 class GiroRequest(BaseModel):
     bank_name: str
     account_number: str
@@ -139,14 +177,34 @@ class GiroResponse(BaseModel):
     message: str
 
 
+class DonationRequest(BaseModel):
+    amount: float   # donor-specified
+
+
 class PaymentOut(BaseModel):
     id: str
     user_id: str
     amount: float
-    payment_type: str
+    payment_type: str            # PAYNOW | GIRO
+    payment_category: str        # SUBSCRIPTION | DONATION
     status: str
     reference: str
     created_at: str
+    period_month: Optional[int] = None
+    period_year: Optional[int] = None
+
+
+# ─────────────────────────────────────────────
+# Monthly status
+# ─────────────────────────────────────────────
+class MonthlyStatusResponse(BaseModel):
+    paid: bool
+    month: int
+    year: int
+    days_until_end_of_month: int
+    giro_active: bool
+    consecutive_failed_months: int
+    is_deactivated: bool
 
 
 # ─────────────────────────────────────────────

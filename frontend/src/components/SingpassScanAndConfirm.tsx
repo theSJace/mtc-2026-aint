@@ -3,18 +3,9 @@ import { QRCodeSVG } from "qrcode.react"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useLanguage } from "@/contexts/LanguageContext"
 import { fetchMyInfoAfterSingpassAuth } from "@/lib/singpass"
 import type { SingpassPrefill } from "@/lib/singpass"
-
-const SINGPASS_DATA_ITEMS = [
-  "Full Name",
-  "I/C Number",
-  "Date of Birth",
-  "Home Address",
-  "Postal Code",
-  "Contact Number",
-  "Email",
-] as const
 
 export interface SingpassScanAndConfirmProps {
   /** When true, the overlay is visible */
@@ -33,9 +24,10 @@ export function SingpassScanAndConfirm({
   open,
   onClose,
   onConfirm,
-  title = "Log in with Singpass",
+  title,
   asModal = true,
 }: SingpassScanAndConfirmProps) {
+  const { t } = useLanguage()
   const sessionId = useMemo(
     () => (open ? `singpass-demo-${Date.now()}` : ""),
     [open]
@@ -68,6 +60,8 @@ export function SingpassScanAndConfirm({
 
   if (!open) return null
 
+  const dataItems = [t.signUp.fullName, t.signUp.icNumber, t.signUp.dob, t.signUp.address, t.signUp.postalCode, t.signUp.contact, t.signUp.email]
+
   const qrCard = (
     <Card
       className="w-full max-w-[440px] rounded-xl border border-gold/20 shadow-lg shadow-green-deep/10"
@@ -75,7 +69,7 @@ export function SingpassScanAndConfirm({
     >
       <CardHeader className="pb-2">
         <CardTitle className="text-xl font-medium text-green-deep">
-          Scan QR code
+          {t.signIn.scanQr}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-6 items-center">
@@ -88,7 +82,7 @@ export function SingpassScanAndConfirm({
           />
         </div>
         <p className="text-sm text-text-mid text-center">
-          Open your SingPass app and scan this QR code to authorise and share your details.
+          {t.signIn.scanInstructions}
         </p>
         <Button
           type="button"
@@ -97,7 +91,7 @@ export function SingpassScanAndConfirm({
           onClick={handleScanned}
           disabled={loading}
         >
-          {loading ? "Retrieving your details…" : "I've scanned — continue"}
+          {loading ? t.signIn.retrieving : t.signIn.scanned}
         </Button>
       </CardContent>
     </Card>
@@ -113,13 +107,15 @@ export function SingpassScanAndConfirm({
             className="flex items-center gap-2 text-sm text-text-mid hover:text-green-deep w-fit"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back
+            {t.common.back}
           </button>
-          <h2 className="text-xl md:text-2xl font-medium text-green-deep">
-            {title}
-          </h2>
+          {title && (
+            <h2 className="text-xl md:text-2xl font-medium text-green-deep">
+              {title}
+            </h2>
+          )}
           <p className="text-sm text-text-mid">
-            Scan the QR code with your SingPass app
+            {t.signIn.scanInstructions}
           </p>
         </div>
       )}
@@ -139,20 +135,20 @@ export function SingpassScanAndConfirm({
           >
             <CardHeader className="pb-2">
               <CardTitle id="singpass-data-dialog-title" className="text-lg font-medium text-green-deep">
-                Data we will fetch from Singpass
+                {t.signIn.singpassData}
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <p className="text-sm text-text-mid">
-                The following information will be retrieved from Singpass and used to pre-fill your sign-up form:
+                {t.signIn.singpassDesc}
               </p>
               <ul className="text-sm text-text-dark list-disc list-inside space-y-1">
-                {SINGPASS_DATA_ITEMS.map((item) => (
+                {dataItems.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
               <p className="text-sm text-text-mid">
-                Are you okay with sharing this data?
+                {t.signIn.sharingOk}
               </p>
               <div className="flex gap-3 pt-2">
                 <Button
@@ -161,7 +157,7 @@ export function SingpassScanAndConfirm({
                   onClick={handleDialogOkay}
                   disabled={loading}
                 >
-                  Okay
+                  {t.signIn.okay}
                 </Button>
                 <Button
                   type="button"
@@ -170,7 +166,7 @@ export function SingpassScanAndConfirm({
                   onClick={handleDialogNotOkay}
                   disabled={loading}
                 >
-                  Not okay
+                  {t.signIn.notOkay}
                 </Button>
               </div>
             </CardContent>

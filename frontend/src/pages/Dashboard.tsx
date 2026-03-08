@@ -1,34 +1,331 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { Plus, Pencil, Trash2, LogOut, User, CreditCard, Users, LayoutDashboard } from "lucide-react"
+import {
+  Plus, Pencil, Trash2, LogOut, User, CreditCard,
+  Users, LayoutDashboard, AlertCircle, CheckCircle2, Clock,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { dependents as depsApi, payments as paymentsApi, type Dependent, type Payment } from "@/lib/api"
+import {
+  dependents as depsApi,
+  payments as paymentsApi,
+  giro as giroApi,
+  type Dependent,
+  type Payment,
+  type MonthlyStatus,
+  type GiroRegisterPayload,
+} from "@/lib/api"
 import { useAuth } from "@/contexts/AuthContext"
 import { useLanguage } from "@/contexts/LanguageContext"
 import { LanguageToggle } from "@/components/LanguageToggle"
 
 type Tab = "overview" | "dependants" | "payments" | "profile"
-
 const RELATIONSHIP_OPTIONS = ["Spouse", "Parents", "In-laws", "Children", "Sibling"] as const
 type Relationship = (typeof RELATIONSHIP_OPTIONS)[number]
+const BANK_OPTIONS = ["DBS/POSB", "OCBC", "UOB", "Standard Chartered", "Citibank", "HSBC", "Maybank"]
 
 interface DependantForm {
-  fullName: string
-  dateOfBirth: string
-  relationship: Relationship | ""
-  sameAddress: boolean
-  address: string
-  nric: string
+  fullName: string; dateOfBirth: string; relationship: Relationship | ""
+  sameAddress: boolean; address: string; nric: string
 }
-
 function emptyForm(): DependantForm {
   return { fullName: "", dateOfBirth: "", relationship: "", sameAddress: true, address: "", nric: "" }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Monthly Payment Indicator component
+// ─────────────────────────────────────────────────────────────
+function MonthlyPaymentBadge({ status, onPay }: { status: MonthlyStatus; onPay: () => void }) {
+  const { t } = useLanguage()
+  const monthName = new Date(status.year, status.month - 1).toLocaleString("default", { month: "long" })
+
+  if (status.paid) {
+    return (
+      <div className="flex items-center gap-3 bg-green-pale/80 border border-green-soft/40 rounded-2xl px-5 py-4">
+        <CheckCircle2 className="w-8 h-8 text-green-mid flex-shrink-0" />
+        <div className="min-w-0">
+          <div className="text-xs text-green-mid font-semibold uppercase tracking-wide">
+            {t.payment.monthlyPaidTitle}
+          </div>
+          <div className="font-playfair text-base text-green-deep font-semibold">
+            {monthName} {status.year} — {t.payment.monthlyPaid}
+          </div>
+          {status.giro_active && (
+            <div className="text-xs text-green-mid mt-0.5">{t.payment.giroSchedule}</div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  const isUrgent = status.days_until_end_of_month <= 5
+  const daysText = t.payment.monthlyDaysLeft(status.days_until_end_of_month)
+
+  return (
+    <div className={cn(
+      "flex items-center gap-3 rounded-2xl px-5 py-4 border",
+      isUrgent
+        ? "bg-red-50 border-red-200"
+        : "bg-amber-50 border-amber-200"
+    )}>
+      <Clock className={cn("w-8 h-8 flex-shrink-0", isUrgent ? "text-red-500" : "text-amber-500")} />
+      <div className="flex-1 min-w-0">
+        <div className={cn("text-xs font-semibold uppercase tracking-wide", isUrgent ? "text-red-600" : "text-amber-700")}>
+          {t.payment.monthlyPaidTitle}
+        </div>
+        <div className={cn("font-playfair text-base font-semibold", isUrgent ? "text-red-700" : "text-amber-900")}>
+          {monthName} {status.year} — {t.payment.monthlyUnpaid}
+        </div>
+        <div className={cn("text-xs mt-0.5", isUrgent ? "text-red-600" : "text-amber-700")}>
+          {status.giro_active
+            ? t.payment.giroWillDeduct
+            : daysText}
+        </div>
+        {status.consecutive_failed_months > 0 && (
+          <div className="text-xs text-red-600 mt-0.5 font-medium">
+            ⚠️ {t.payment.failedMonths(status.consecutive_failed_months)}
+          </div>
+        )}
+      </div>
+      {!status.giro_active && (
+        <Button onClick={onPay} size="sm" className="flex-shrink-0 rounded-xl text-xs h-8 px-3">
+          Pay now
+        </Button>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
+// GIRO Registration form (used in Profile tab)
+// ─────────────────────────────────────────────────────────────
+function GiroRegistrationPanel() {
+  const { user, refreshUser } = useAuth()
+  const { t } = useLanguage()
+
+  const [showForm, setShowForm] = useState(false)
+  const [bankName, setBankName] = useState("")
+  const [accountNumber, setAccountNumber] = useState("")
+  const [accountHolder, setAccountHolder] = useState(user?.full_name ?? "")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+
+  const giro = user?.giro
+  const isActive = giro?.status === "ACTIVE"
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!bankName || !accountNumber || !accountHolder) return
+    setIsLoading(true); setError(null); setSuccess(null)
+    try {
+      const res = await giroApi.register({ bank_name: bankName, account_number: accountNumber, account_holder_name: accountHolder })
+      setSuccess(t.payment.giroRegisteredSuccess)
+      setShowForm(false)
+      setBankName(""); setAccountNumber("")
+      // Refresh user profile to reflect new GIRO info
+      const me = await import("@/lib/api").then(m => m.auth.me())
+      refreshUser(me)
+    } catch (err: any) {
+      setError(err?.detail?.message ?? t.common.error)
+    } finally {
+      setIsLoading(false) }
+  }
+
+  const handleCancel = async () => {
+    setIsLoading(true); setError(null)
+    try {
+      await giroApi.cancel()
+      setShowCancelConfirm(false)
+      setSuccess("GIRO mandate cancelled.")
+      const me = await import("@/lib/api").then(m => m.auth.me())
+      refreshUser(me)
+    } catch (err: any) {
+      setError(err?.detail?.message ?? t.common.error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const giroStatusLabel = (s: string) => {
+    const map: Record<string, string> = {
+      ACTIVE: t.payment.giroStatuses.ACTIVE,
+      PENDING_MANDATE: t.payment.giroStatuses.PENDING_MANDATE,
+      CANCELLED: t.payment.giroStatuses.CANCELLED,
+    }
+    return map[s] ?? s
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-green-pale p-5 flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-green-deep">{t.payment.giroSection}</h3>
+        {isActive && (
+          <span className="text-xs bg-green-pale text-green-deep px-2.5 py-0.5 rounded-full font-semibold">
+            ✓ {t.payment.giroStatuses.ACTIVE}
+          </span>
+        )}
+      </div>
+
+      {success && (
+        <div className="rounded-lg bg-green-pale/60 border border-green-deep/20 px-4 py-3 text-sm text-green-deep font-medium">
+          ✅ {success}
+        </div>
+      )}
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">{error}</div>
+      )}
+
+      {giro && giro.status !== "CANCELLED" ? (
+        /* Existing mandate */
+        <div className="flex flex-col gap-3">
+          <div className="rounded-xl bg-cream px-5 py-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            <span className="text-text-light">{t.payment.giroBank}</span>
+            <span className="font-medium text-text-dark">{giro.bank_name}</span>
+            <span className="text-text-light">{t.payment.giroAccount}</span>
+            <span className="font-mono text-text-dark">{giro.account_number_masked}</span>
+            <span className="text-text-light">{t.payment.giroMandate}</span>
+            <span className="font-mono text-text-dark text-xs">{giro.mandate_ref}</span>
+            <span className="text-text-light">{t.payment.giroStatus}</span>
+            <span className={cn("font-medium", isActive ? "text-green-deep" : "text-amber-700")}>
+              {giroStatusLabel(giro.status)}
+            </span>
+          </div>
+          <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800">
+            📅 {t.payment.giroSchedule}
+          </div>
+          <div className="flex gap-3">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="flex-1 rounded-xl border border-green-deep/20 text-xs"
+              onClick={() => { setShowForm(true); setSuccess(null) }}
+            >
+              ✏️ Update GIRO Details
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs"
+              onClick={() => setShowCancelConfirm(true)}
+            >
+              {t.payment.cancelGiro}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        /* No mandate */
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-text-mid">{t.payment.giroNotRegistered}</p>
+          <p className="text-xs text-text-light leading-relaxed">
+            Set up GIRO for automatic monthly deductions. Deductions happen on the 15th each month,
+            with a retry on the 30th if the first attempt fails.
+          </p>
+          {!showForm && (
+            <Button
+              size="sm"
+              className="w-full sm:w-auto rounded-xl"
+              onClick={() => { setShowForm(true); setSuccess(null) }}
+            >
+              + {t.payment.registerGiro}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Registration / update form */}
+      {showForm && (
+        <form onSubmit={handleRegister} className="flex flex-col gap-4 border-t border-green-pale pt-4 mt-1">
+          <p className="text-xs font-semibold text-green-deep uppercase tracking-wide">
+            {giro ? "Update GIRO Details" : t.payment.registerGiro}
+          </p>
+          <div className="flex flex-col gap-1.5">
+            <Label>{t.payment.bankName}</Label>
+            <select
+              className="flex h-11 w-full rounded-lg border border-green-deep/20 bg-cream-dark px-4 text-sm text-text-dark focus:outline-none focus:ring-2 focus:ring-green-mid"
+              value={bankName}
+              onChange={(e) => setBankName(e.target.value)}
+              required
+              disabled={isLoading}
+            >
+              <option value="">{t.payment.selectBank}</option>
+              {BANK_OPTIONS.map((b) => <option key={b} value={b}>{b}</option>)}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>{t.payment.accountNumber}</Label>
+            <Input
+              value={accountNumber}
+              onChange={(e) => setAccountNumber(e.target.value)}
+              placeholder="e.g. 123-456-789-0"
+              required disabled={isLoading}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>{t.payment.accountHolder}</Label>
+            <Input
+              value={accountHolder}
+              onChange={(e) => setAccountHolder(e.target.value)}
+              required disabled={isLoading}
+            />
+          </div>
+          <div className="flex gap-3">
+            <Button type="submit" disabled={isLoading} className="flex-1 rounded-xl h-10 text-sm">
+              {isLoading ? t.common.loading : (giro ? "Update" : t.payment.registerGiro)}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1 rounded-xl h-10 border border-green-deep/20 text-sm"
+              onClick={() => setShowForm(false)}
+              disabled={isLoading}
+            >
+              {t.common.cancel}
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {/* Cancel confirm modal */}
+      {showCancelConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-[360px] rounded-2xl border border-gold/20 shadow-2xl bg-cream">
+            <CardContent className="pt-6 pb-5 flex flex-col items-center gap-4 text-center">
+              <div className="text-4xl">⚠️</div>
+              <p className="text-sm text-text-mid font-medium">{t.payment.giroCancelConfirm}</p>
+              <p className="text-xs text-text-light">Your automatic monthly deductions will stop.</p>
+              <div className="flex gap-3 w-full">
+                <Button
+                  onClick={handleCancel}
+                  disabled={isLoading}
+                  className="flex-1 rounded-xl bg-red-600 hover:bg-red-700"
+                >
+                  {isLoading ? t.common.loading : t.common.yes}
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowCancelConfirm(false)}
+                  className="flex-1 rounded-xl border border-green-deep/20"
+                  disabled={isLoading}
+                >
+                  {t.common.cancel}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
+// Main Dashboard
+// ─────────────────────────────────────────────────────────────
 export function Dashboard() {
   const navigate = useNavigate()
   const { user, logout, refreshUser } = useAuth()
@@ -37,112 +334,88 @@ export function Dashboard() {
   const [tab, setTab] = useState<Tab>("overview")
   const [dependants, setDependants] = useState<Dependent[]>([])
   const [payments, setPayments] = useState<Payment[]>([])
+  const [monthlyStatus, setMonthlyStatus] = useState<MonthlyStatus | null>(null)
   const [isLoadingDeps, setIsLoadingDeps] = useState(false)
   const [isLoadingPay, setIsLoadingPay] = useState(false)
 
-  // Dependant add/edit form
+  // Dependant form
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<DependantForm>(emptyForm())
   const [formError, setFormError] = useState<string | null>(null)
   const [formSubmitting, setFormSubmitting] = useState(false)
-
-  // Confirm remove
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
 
-  // Redirect if not logged in
+  useEffect(() => { if (!user) navigate("/sign-in") }, [user])
+
+  // Load monthly status on mount
   useEffect(() => {
-    if (!user) navigate("/sign-in")
+    if (user && user.membership_status !== "NOT_REGISTERED") {
+      paymentsApi.monthlyStatus().then(setMonthlyStatus).catch(() => {})
+    }
   }, [user])
 
-  // Load dependants when tab opens
   useEffect(() => {
     if (tab === "dependants" && dependants.length === 0) loadDependants()
   }, [tab])
 
   useEffect(() => {
-    if (tab === "payments" && payments.length === 0) loadPayments()
+    if (tab === "payments") loadPayments()
   }, [tab])
 
   const loadDependants = async () => {
     setIsLoadingDeps(true)
-    try {
-      const data = await depsApi.list()
-      setDependants(data)
-    } catch { /* silent */ } finally { setIsLoadingDeps(false) }
+    try { setDependants(await depsApi.list()) } catch {} finally { setIsLoadingDeps(false) }
   }
 
   const loadPayments = async () => {
     setIsLoadingPay(true)
-    try {
-      const data = await paymentsApi.list()
-      setPayments(data)
-    } catch { /* silent */ } finally { setIsLoadingPay(false) }
+    try { setPayments(await paymentsApi.list()) } catch {} finally { setIsLoadingPay(false) }
   }
 
-  const openAdd = () => {
-    setEditingId(null)
-    setForm(emptyForm())
-    setFormError(null)
-    setShowForm(true)
-  }
+  const openAdd = useCallback(() => {
+    setEditingId(null); setForm(emptyForm()); setFormError(null); setShowForm(true)
+  }, [])
 
   const openEdit = (dep: Dependent) => {
     setEditingId(dep.id)
-    setForm({
-      fullName: dep.full_name,
-      dateOfBirth: dep.date_of_birth,
-      relationship: dep.relationship as Relationship,
-      sameAddress: dep.same_address,
-      address: dep.address,
-      nric: dep.nric,
-    })
-    setFormError(null)
-    setShowForm(true)
+    setForm({ fullName: dep.full_name, dateOfBirth: dep.date_of_birth, relationship: dep.relationship as Relationship, sameAddress: dep.same_address, address: dep.address, nric: dep.nric })
+    setFormError(null); setShowForm(true)
   }
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.fullName || !form.dateOfBirth || !form.relationship) return
-    setFormSubmitting(true)
-    setFormError(null)
+    setFormSubmitting(true); setFormError(null)
     try {
       const payload = {
-        full_name: form.fullName,
-        date_of_birth: form.dateOfBirth,
-        relationship: form.relationship,
-        same_address: form.sameAddress,
+        full_name: form.fullName, date_of_birth: form.dateOfBirth,
+        relationship: form.relationship, same_address: form.sameAddress,
         address: form.sameAddress ? (user?.address ?? "") : form.address,
         nric: form.nric || undefined,
       }
       if (editingId) {
         const updated = await depsApi.update(editingId, payload)
-        setDependants((prev) => prev.map((d) => d.id === editingId ? updated : d))
+        setDependants(prev => prev.map(d => d.id === editingId ? updated : d))
       } else {
         const created = await depsApi.add(payload)
-        setDependants((prev) => [...prev, created])
+        setDependants(prev => [...prev, created])
       }
       setShowForm(false)
     } catch (err: any) {
       const code = err?.detail?.code
-      if (code === "NRIC_IS_PRIMARY") setFormError("This NRIC already has a primary account.")
-      else setFormError(err?.detail?.message ?? t.common.error)
-    } finally {
-      setFormSubmitting(false)
-    }
+      setFormError(code === "NRIC_IS_PRIMARY" ? t.dashboard.nricPrimaryAccount : (err?.detail?.message ?? t.common.error))
+    } finally { setFormSubmitting(false) }
   }
 
   const handleRemove = async (id: string) => {
     try {
       await depsApi.remove(id)
-      setDependants((prev) => prev.filter((d) => d.id !== id))
-    } catch { /* silent */ } finally { setConfirmRemoveId(null) }
+      setDependants(prev => prev.filter(d => d.id !== id))
+    } catch {} finally { setConfirmRemoveId(null) }
   }
 
-  const handleSignOut = () => {
-    logout()
-    navigate("/")
-  }
+  const handleSignOut = () => { logout(); navigate("/") }
 
   if (!user) return null
 
@@ -164,7 +437,7 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-cream">
-      {/* Top bar */}
+      {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-cream/95 backdrop-blur-xl border-b border-gold/20 px-5 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-green-deep flex items-center justify-center text-white text-sm">🕌</div>
@@ -180,10 +453,10 @@ export function Dashboard() {
       </header>
 
       <div className="pt-[60px] flex min-h-screen">
-        {/* Sidebar (desktop) */}
+        {/* Desktop sidebar */}
         <aside className="hidden md:flex flex-col w-56 border-r border-gold/10 bg-white pt-8 pb-6 px-4 fixed top-[60px] bottom-0 left-0">
           <div className="flex flex-col gap-1">
-            {tabs.map((tb) => (
+            {tabs.map(tb => (
               <button
                 key={tb.id}
                 onClick={() => setTab(tb.id)}
@@ -192,32 +465,61 @@ export function Dashboard() {
                   tab === tb.id ? "bg-green-deep text-white" : "text-text-mid hover:bg-green-pale hover:text-green-deep"
                 )}
               >
-                {tb.icon}
-                {tb.label}
+                {tb.icon} {tb.label}
+                {/* Dot indicator on payments tab when unpaid */}
+                {tb.id === "overview" && monthlyStatus && !monthlyStatus.paid && (
+                  <span className="ml-auto w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
+                )}
               </button>
             ))}
           </div>
           <div className="mt-auto">
             <button onClick={handleSignOut} className="flex items-center gap-2 px-3 py-2.5 text-sm text-text-light hover:text-red-600 w-full rounded-lg hover:bg-red-50 transition-colors">
-              <LogOut size={15} />
-              {t.dashboard.signOut}
+              <LogOut size={15} /> {t.dashboard.signOut}
             </button>
           </div>
         </aside>
 
-        {/* Main content */}
+        {/* Main */}
         <main className="flex-1 md:ml-56 px-4 md:px-8 py-6 pb-24 max-w-4xl">
-          {/* ── OVERVIEW ── */}
+
+          {/* ══ OVERVIEW ══════════════════════════════════════════════════ */}
           {tab === "overview" && (
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-5">
               <div>
                 <p className="text-sm text-text-light">{t.dashboard.welcome}</p>
                 <h1 className="font-playfair text-2xl text-green-deep">{user.full_name}</h1>
-                <p className="text-xs text-text-light mt-0.5">{t.dashboard.memberSince} {new Date(user.created_at).toLocaleDateString("en-SG", { year: "numeric", month: "long" })}</p>
+                <p className="text-xs text-text-light mt-0.5">
+                  {t.dashboard.memberSince} {new Date(user.created_at).toLocaleDateString("en-SG", { year: "numeric", month: "long" })}
+                </p>
               </div>
 
+              {/* ── Monthly payment indicator ── */}
+              {isActive && monthlyStatus && (
+                <MonthlyPaymentBadge
+                  status={monthlyStatus}
+                  onPay={() => navigate("/payment-setup")}
+                />
+              )}
+
+              {/* Deactivation warning */}
+              {user.is_deactivated && (
+                <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl px-5 py-4">
+                  <AlertCircle className="w-8 h-8 text-red-500 flex-shrink-0" />
+                  <div>
+                    <div className="text-sm font-semibold text-red-800">{t.payment.deactivatedWarning}</div>
+                    <Button onClick={() => navigate("/select-tier")} size="sm" className="mt-2 rounded-lg h-8 px-4 text-xs bg-red-600 hover:bg-red-700">
+                      Re-activate →
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Membership card */}
-              <div className={cn("rounded-2xl p-6 relative overflow-hidden", isActive ? "bg-gradient-to-br from-green-deep to-green-mid" : "bg-white border-2 border-dashed border-green-pale")}>
+              <div className={cn(
+                "rounded-2xl p-6 relative overflow-hidden",
+                isActive ? "bg-gradient-to-br from-green-deep to-green-mid" : "bg-white border-2 border-dashed border-green-pale"
+              )}>
                 {isActive && (
                   <>
                     <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/2" />
@@ -234,9 +536,17 @@ export function Dashboard() {
                         {statusLabel}
                       </div>
                     </div>
-                    <span className={cn("text-xs font-bold px-3 py-1 rounded-full", isActive ? "bg-white/20 text-white" : "bg-amber-100 text-amber-700")}>
-                      {isActive ? t.dashboard.coverageActive : t.dashboard.noCoverage}
-                    </span>
+                    <div className="flex flex-col items-end gap-2">
+                      <span className={cn("text-xs font-bold px-3 py-1 rounded-full", isActive ? "bg-white/20 text-white" : "bg-amber-100 text-amber-700")}>
+                        {isActive ? t.dashboard.coverageActive : t.dashboard.noCoverage}
+                      </span>
+                      {/* GIRO badge on card */}
+                      {user.giro?.status === "ACTIVE" && (
+                        <span className="text-[10px] font-semibold bg-white/15 text-white/80 px-2 py-0.5 rounded-full">
+                          🏦 GIRO Active
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {isActive ? (
                     <div className="grid grid-cols-2 gap-4">
@@ -248,6 +558,20 @@ export function Dashboard() {
                         <div className="text-white/60 text-[10px] uppercase tracking-wider mb-1">{t.dashboard.monthlyFee}</div>
                         <div className="text-white font-semibold text-sm">{monthlyFee}/month</div>
                       </div>
+                      {user.consecutive_failed_months > 0 && (
+                        <div className="col-span-2">
+                          <div className="text-white/60 text-[10px] uppercase tracking-wider mb-1">Missed Payments</div>
+                          <div className="flex gap-2 items-center">
+                            {[1, 2, 3].map(n => (
+                              <div key={n} className={cn(
+                                "w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold",
+                                n <= user.consecutive_failed_months ? "bg-red-400 text-white" : "bg-white/20 text-white/50"
+                              )}>{n}</div>
+                            ))}
+                            <span className="text-white/60 text-xs ml-1">/ 3 before deactivation</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="flex gap-3 mt-3">
@@ -262,10 +586,10 @@ export function Dashboard() {
               {/* Quick stats */}
               <div className="grid grid-cols-3 gap-4">
                 {[
-                  { label: "Family Members", value: dependants.length.toString(), icon: "👨‍👩‍👧" },
-                  { label: "Payment Method", value: payments.some(p => p.status === "COMPLETED") ? "Active" : "Pending", icon: "💳" },
+                  { label: "Family Members", value: String(dependants.length || "—"), icon: "👨‍👩‍👧" },
+                  { label: "GIRO", value: user.giro?.status === "ACTIVE" ? "Active" : "Not set", icon: "🏦" },
                   { label: "Coverage", value: isActive ? "Full" : "None", icon: "🛡️" },
-                ].map((s) => (
+                ].map(s => (
                   <div key={s.label} className="bg-white rounded-xl border border-green-pale p-4 text-center">
                     <div className="text-2xl mb-1.5">{s.icon}</div>
                     <div className="font-semibold text-green-deep text-sm">{s.value}</div>
@@ -280,15 +604,11 @@ export function Dashboard() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
                     { label: "Add Family Member", icon: "👤", action: () => { setTab("dependants"); setTimeout(openAdd, 100) } },
-                    { label: isActive ? "Make Payment" : "Activate Now", icon: "💰", action: () => navigate(isActive ? "/payment-setup" : "/select-tier") },
-                    { label: "View History", icon: "📋", action: () => setTab("payments") },
-                    { label: "Edit Profile", icon: "✏️", action: () => setTab("profile") },
-                  ].map((a) => (
-                    <button
-                      key={a.label}
-                      onClick={a.action}
-                      className="flex flex-col items-center gap-2 p-3 rounded-xl bg-cream hover:bg-green-pale transition-colors text-center"
-                    >
+                    { label: monthlyStatus?.paid ? "Donate" : "Pay Now", icon: "💰", action: () => navigate("/payment-setup") },
+                    { label: "Payment History", icon: "📋", action: () => setTab("payments") },
+                    { label: "Set Up GIRO", icon: "🏦", action: () => setTab("profile") },
+                  ].map(a => (
+                    <button key={a.label} onClick={a.action} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-cream hover:bg-green-pale transition-colors text-center">
                       <span className="text-2xl">{a.icon}</span>
                       <span className="text-[11px] text-text-mid font-medium leading-tight">{a.label}</span>
                     </button>
@@ -298,7 +618,7 @@ export function Dashboard() {
             </div>
           )}
 
-          {/* ── DEPENDANTS ── */}
+          {/* ══ DEPENDANTS ════════════════════════════════════════════════ */}
           {tab === "dependants" && (
             <div className="flex flex-col gap-5">
               <div className="flex items-center justify-between">
@@ -307,8 +627,7 @@ export function Dashboard() {
                   <p className="text-xs text-text-light mt-0.5">Family members under your Skim Pintar coverage</p>
                 </div>
                 <Button onClick={openAdd} className="gap-2 rounded-xl text-sm h-9">
-                  <Plus size={14} />
-                  {t.dashboard.addDependant.replace("+ ", "")}
+                  <Plus size={14} /> Add Member
                 </Button>
               </div>
 
@@ -319,13 +638,12 @@ export function Dashboard() {
                   <div className="text-5xl mb-4">👨‍👩‍👧</div>
                   <p className="text-text-mid text-sm mb-5">{t.dashboard.noDependants}</p>
                   <Button onClick={openAdd} variant="secondary" className="border border-green-deep/20 rounded-xl gap-2">
-                    <Plus size={14} />
-                    {t.dashboard.addDependant}
+                    <Plus size={14} /> {t.dashboard.addDependant}
                   </Button>
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {dependants.map((dep) => (
+                  {dependants.map(dep => (
                     <div key={dep.id} className="bg-white rounded-2xl border border-green-pale px-5 py-4 flex items-start justify-between gap-4">
                       <div className="flex gap-4 items-start min-w-0">
                         <div className="w-10 h-10 rounded-full bg-green-pale flex items-center justify-center text-lg flex-shrink-0">
@@ -337,9 +655,7 @@ export function Dashboard() {
                             {dep.relationship} · Born {new Date(dep.date_of_birth).toLocaleDateString("en-SG")}
                           </div>
                           {dep.nric && <div className="text-xs text-text-light font-mono mt-0.5">{dep.nric}</div>}
-                          <div className="text-xs text-text-light mt-0.5">
-                            {dep.same_address ? "Same address" : dep.address}
-                          </div>
+                          <div className="text-xs text-text-light mt-0.5">{dep.same_address ? "Same address" : dep.address}</div>
                         </div>
                       </div>
                       <div className="flex gap-2 flex-shrink-0">
@@ -357,7 +673,7 @@ export function Dashboard() {
             </div>
           )}
 
-          {/* ── PAYMENTS ── */}
+          {/* ══ PAYMENTS ══════════════════════════════════════════════════ */}
           {tab === "payments" && (
             <div className="flex flex-col gap-5">
               <div className="flex items-center justify-between">
@@ -367,19 +683,24 @@ export function Dashboard() {
                 </div>
                 {isActive && (
                   <Button onClick={() => navigate("/payment-setup")} className="rounded-xl text-sm h-9 gap-1.5">
-                    <CreditCard size={14} />
-                    {t.dashboard.makePayment}
+                    <CreditCard size={14} /> {t.dashboard.makePayment}
                   </Button>
                 )}
               </div>
+
+              {/* Monthly status reminder on payments tab */}
+              {monthlyStatus && !monthlyStatus.paid && isActive && (
+                <MonthlyPaymentBadge status={monthlyStatus} onPay={() => navigate("/payment-setup")} />
+              )}
 
               {!isActive && (
                 <div className="bg-amber-50 rounded-2xl border border-amber-200 px-5 py-4 flex gap-3 items-center">
                   <span className="text-2xl">⚠️</span>
                   <div>
-                    <div className="text-sm font-medium text-amber-900">No active membership</div>
+                    <div className="text-sm font-medium text-amber-900">{t.dashboard.noActiveMembership}</div>
                     <div className="text-xs text-amber-700 mt-0.5">
-                      <Link to="/select-tier" className="underline">{t.dashboard.selectTier}</Link> to start making payments.
+                      <Link to="/select-tier" className="underline">{t.dashboard.selectTier}</Link>
+                      {t.dashboard.selectTierToPay}
                     </div>
                   </div>
                 </div>
@@ -394,48 +715,109 @@ export function Dashboard() {
                 </div>
               ) : (
                 <div className="bg-white rounded-2xl border border-green-pale overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-cream border-b border-green-pale">
-                        <th className="px-5 py-3 text-left text-xs font-semibold text-text-light uppercase tracking-wider">{t.dashboard.paymentDate}</th>
-                        <th className="px-5 py-3 text-left text-xs font-semibold text-text-light uppercase tracking-wider">{t.dashboard.paymentType}</th>
-                        <th className="px-5 py-3 text-left text-xs font-semibold text-text-light uppercase tracking-wider">{t.dashboard.paymentAmount}</th>
-                        <th className="px-5 py-3 text-left text-xs font-semibold text-text-light uppercase tracking-wider">{t.dashboard.paymentStatus}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-green-pale/50">
-                      {payments.map((p) => {
-                        const statusMap: Record<string, { color: string; label: string }> = {
-                          COMPLETED: { color: "bg-green-pale text-green-deep", label: t.dashboard.statuses2.COMPLETED },
-                          PENDING: { color: "bg-amber-100 text-amber-700", label: t.dashboard.statuses2.PENDING },
-                          FAILED: { color: "bg-red-100 text-red-700", label: t.dashboard.statuses2.FAILED },
-                        }
-                        const s = statusMap[p.status] ?? statusMap.PENDING
-                        return (
-                          <tr key={p.id} className="hover:bg-cream/50 transition-colors">
-                            <td className="px-5 py-3.5 text-text-mid">{new Date(p.created_at).toLocaleDateString("en-SG")}</td>
-                            <td className="px-5 py-3.5 font-mono text-xs text-text-dark">{p.payment_type}</td>
-                            <td className="px-5 py-3.5 font-semibold text-green-deep">${p.amount.toFixed(2)}</td>
-                            <td className="px-5 py-3.5">
-                              <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", s.color)}>{s.label}</span>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
+                  {/* Desktop table */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-cream border-b border-green-pale">
+                          {[
+                            t.dashboard.paymentDate,
+                            t.dashboard.paymentTypeColumn,
+                            t.dashboard.paymentType,
+                            t.dashboard.paymentAmount,
+                            t.dashboard.paymentStatus,
+                          ].map(h => (
+                            <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-text-light uppercase tracking-wider whitespace-nowrap">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-green-pale/50">
+                        {payments.map(p => {
+                          const statusMap: Record<string, { color: string; label: string }> = {
+                            COMPLETED: { color: "bg-green-pale text-green-deep", label: t.dashboard.statuses2.COMPLETED },
+                            PENDING: { color: "bg-amber-100 text-amber-700", label: t.dashboard.statuses2.PENDING },
+                            FAILED: { color: "bg-red-100 text-red-700", label: t.dashboard.statuses2.FAILED },
+                          }
+                          const s = statusMap[p.status] ?? statusMap.PENDING
+                          const isSubscription = p.payment_category !== "DONATION"
+                          return (
+                            <tr key={p.id} className="hover:bg-cream/50 transition-colors">
+                              <td className="px-4 py-3.5 text-text-mid whitespace-nowrap">
+                                {new Date(p.created_at).toLocaleDateString("en-SG")}
+                              </td>
+                              {/* TYPE column — Subscription or Donation */}
+                              <td className="px-4 py-3.5">
+                                <span className={cn(
+                                  "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold",
+                                  isSubscription
+                                    ? "bg-green-pale/80 text-green-deep"
+                                    : "bg-gold/20 text-amber-900"
+                                )}>
+                                  {isSubscription ? "📋" : "🤲"}
+                                  {isSubscription ? t.payment.categorySubscription : t.payment.categoryDonation}
+                                </span>
+                              </td>
+                              {/* METHOD column */}
+                              <td className="px-4 py-3.5">
+                                <span className="font-mono text-xs text-text-dark bg-cream px-2 py-0.5 rounded">
+                                  {p.payment_type}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3.5 font-semibold text-green-deep whitespace-nowrap">
+                                ${p.amount.toFixed(2)}
+                              </td>
+                              <td className="px-4 py-3.5">
+                                <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap", s.color)}>{s.label}</span>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile cards */}
+                  <div className="sm:hidden divide-y divide-green-pale/50">
+                    {payments.map(p => {
+                      const isSubscription = p.payment_category !== "DONATION"
+                      const statusColor = p.status === "COMPLETED" ? "text-green-deep" : p.status === "FAILED" ? "text-red-600" : "text-amber-700"
+                      const statusLabel = p.status === "COMPLETED" ? t.dashboard.statuses2.COMPLETED : p.status === "FAILED" ? t.dashboard.statuses2.FAILED : t.dashboard.statuses2.PENDING
+                      return (
+                        <div key={p.id} className="px-4 py-4 flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={cn(
+                                "text-[11px] font-semibold px-2 py-0.5 rounded-full",
+                                isSubscription ? "bg-green-pale text-green-deep" : "bg-gold/20 text-amber-900"
+                              )}>
+                                {isSubscription ? t.payment.categorySubscription : t.payment.categoryDonation}
+                              </span>
+                              <span className="text-xs font-mono text-text-light">{p.payment_type}</span>
+                            </div>
+                            <div className="text-xs text-text-light">{new Date(p.created_at).toLocaleDateString("en-SG")}</div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="font-semibold text-green-deep">${p.amount.toFixed(2)}</div>
+                            <div className={cn("text-xs font-medium", statusColor)}>{statusLabel}</div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* ── PROFILE ── */}
+          {/* ══ PROFILE ═══════════════════════════════════════════════════ */}
           {tab === "profile" && (
             <div className="flex flex-col gap-5">
               <div>
                 <h2 className="font-playfair text-2xl text-green-deep">{t.dashboard.profile}</h2>
-                <p className="text-xs text-text-light mt-0.5">Your personal details and account info</p>
+                <p className="text-xs text-text-light mt-0.5">{t.dashboard.profileSubtitle}</p>
               </div>
+
+              {/* Personal info card */}
               <div className="bg-white rounded-2xl border border-green-pale p-6 flex flex-col gap-4">
                 <div className="flex items-center gap-4 pb-4 border-b border-green-pale/50">
                   <div className="w-16 h-16 rounded-full bg-green-deep flex items-center justify-center text-white text-2xl font-playfair">
@@ -455,19 +837,23 @@ export function Dashboard() {
                     { label: t.dashboard.phone, value: user.phone },
                     { label: t.dashboard.email, value: user.email },
                     { label: t.dashboard.memberId, value: user.membership_id ?? "—" },
-                    { label: t.dashboard.address, value: user.address + (user.postal_code ? ` S(${user.postal_code})` : "") },
+                    { label: t.dashboard.address, value: `${user.address}${user.postal_code ? ` S(${user.postal_code})` : ""}` },
                     { label: "Date of Birth", value: user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString("en-SG") : "—" },
                   ].map(({ label, value }) => (
                     <div key={label}>
                       <div className="text-[11px] text-text-light uppercase tracking-wide mb-1">{label}</div>
-                      <div className="text-sm text-text-dark font-medium">{value}</div>
+                      <div className="text-sm text-text-dark font-medium break-all">{value}</div>
                     </div>
                   ))}
                 </div>
               </div>
 
+              {/* ── GIRO section ── */}
+              <GiroRegistrationPanel />
+
+              {/* Language preference */}
               <div className="bg-white rounded-2xl border border-green-pale p-5">
-                <h3 className="text-sm font-semibold text-green-deep mb-4">Language Preference</h3>
+                <h3 className="text-sm font-semibold text-green-deep mb-4">{t.dashboard.languagePreference}</h3>
                 <LanguageToggle />
               </div>
 
@@ -476,8 +862,7 @@ export function Dashboard() {
                 variant="secondary"
                 className="w-full sm:w-auto h-11 rounded-xl text-red-600 border-red-200 hover:bg-red-50 gap-2"
               >
-                <LogOut size={15} />
-                {t.dashboard.signOut}
+                <LogOut size={15} /> {t.dashboard.signOut}
               </Button>
             </div>
           )}
@@ -486,28 +871,32 @@ export function Dashboard() {
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white border-t border-gold/20 flex">
-        {tabs.map((tb) => (
+        {tabs.map(tb => (
           <button
             key={tb.id}
             onClick={() => setTab(tb.id)}
             className={cn(
-              "flex-1 flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors",
+              "flex-1 flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors relative",
               tab === tb.id ? "text-green-deep" : "text-text-light"
             )}
           >
-            <span className={cn("transition-colors", tab === tb.id ? "text-green-deep" : "text-text-light")}>{tb.icon}</span>
+            {tb.icon}
             {tb.label}
+            {/* Unread dot for overview when unpaid */}
+            {tb.id === "overview" && monthlyStatus && !monthlyStatus.paid && (
+              <span className="absolute top-1.5 right-[calc(50%-12px)] w-2 h-2 rounded-full bg-amber-500" />
+            )}
           </button>
         ))}
       </nav>
 
-      {/* Add/Edit Dependant Modal */}
+      {/* Add/Edit dependant modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" onClick={() => setShowForm(false)}>
-          <Card className="w-full max-w-[480px] rounded-2xl border border-gold/20 shadow-2xl bg-cream max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <Card className="w-full max-w-[480px] rounded-2xl border border-gold/20 shadow-2xl bg-cream max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <CardHeader className="pb-2 sticky top-0 bg-cream z-10 border-b border-green-pale/50">
               <CardTitle className="text-lg font-playfair text-green-deep">
-                {editingId ? t.dashboard.edit + " Family Member" : t.dashboard.addDependant}
+                {editingId ? `${t.dashboard.edit}${t.dashboard.editFamilyMember}` : t.dashboard.addDependant}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
@@ -516,52 +905,49 @@ export function Dashboard() {
               )}
               <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <Label>{t.signUp.depFullName}</Label>
-                  <Input value={form.fullName} onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))} required disabled={formSubmitting} />
+                  <Label>Full Name *</Label>
+                  <Input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} required disabled={formSubmitting} />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label>{t.signUp.depDob}</Label>
-                  <Input type="date" value={form.dateOfBirth} onChange={(e) => setForm((f) => ({ ...f, dateOfBirth: e.target.value }))} required disabled={formSubmitting} />
+                  <Label>Date of Birth *</Label>
+                  <Input type="date" value={form.dateOfBirth} onChange={e => setForm(f => ({ ...f, dateOfBirth: e.target.value }))} required disabled={formSubmitting} />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label>{t.signUp.depRelationship}</Label>
+                  <Label>Relationship *</Label>
                   <select
                     className="flex h-12 w-full rounded-lg border border-green-deep/20 bg-cream-dark px-4 text-sm text-text-dark focus:outline-none focus:ring-2 focus:ring-green-mid"
                     value={form.relationship}
-                    onChange={(e) => setForm((f) => ({ ...f, relationship: e.target.value as Relationship }))}
-                    required
-                    disabled={formSubmitting}
+                    onChange={e => setForm(f => ({ ...f, relationship: e.target.value as Relationship }))}
+                    required disabled={formSubmitting}
                   >
-                    <option value="">{t.signUp.selectRelationship}</option>
-                    {RELATIONSHIP_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                    <option value="">Select relationship…</option>
+                    {RELATIONSHIP_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label>{t.signUp.depNric}</Label>
-                  <Input value={form.nric} onChange={(e) => setForm((f) => ({ ...f, nric: e.target.value }))} placeholder="e.g. S9876543A" disabled={formSubmitting} />
+                  <Label>NRIC (optional)</Label>
+                  <Input value={form.nric} onChange={e => setForm(f => ({ ...f, nric: e.target.value }))} placeholder="e.g. S9876543A" disabled={formSubmitting} />
                 </div>
                 <div className="flex items-center gap-2">
                   <input
-                    type="checkbox"
-                    id="dep-same"
+                    type="checkbox" id="dep-same"
                     checked={form.sameAddress}
-                    onChange={(e) => setForm((f) => ({ ...f, sameAddress: e.target.checked }))}
-                    className="h-4 w-4 rounded"
-                    disabled={formSubmitting}
+                    onChange={e => setForm(f => ({ ...f, sameAddress: e.target.checked }))}
+                    className="h-4 w-4 rounded" disabled={formSubmitting}
                   />
-                  <Label htmlFor="dep-same" className="font-normal cursor-pointer">{t.signUp.sameAddress}</Label>
+                  <Label htmlFor="dep-same" className="font-normal cursor-pointer">{t.dashboard.sameAddressLabel}</Label>
                 </div>
                 {!form.sameAddress && (
                   <div className="flex flex-col gap-1.5">
-                    <Label>{t.signUp.depAddress}</Label>
-                    <Input value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} required={!form.sameAddress} disabled={formSubmitting} />
+                    <Label>Address *</Label>
+                    <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} required={!form.sameAddress} disabled={formSubmitting} />
                   </div>
                 )}
                 <div className="flex gap-3 pt-2">
                   <Button type="submit" disabled={formSubmitting} className="flex-1 rounded-xl h-11">
                     {formSubmitting ? t.common.loading : t.common.save}
                   </Button>
-                  <Button type="button" variant="secondary" onClick={() => setShowForm(false)} className="flex-1 rounded-xl h-11 border border-green-deep/20">
+                  <Button type="button" variant="secondary" onClick={() => setShowForm(false)} className="flex-1 rounded-xl h-11 border border-green-deep/20" disabled={formSubmitting}>
                     {t.common.cancel}
                   </Button>
                 </div>
@@ -571,7 +957,7 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* Confirm remove modal */}
+      {/* Remove confirm modal */}
       {confirmRemoveId && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <Card className="w-full max-w-[360px] rounded-2xl border border-gold/20 shadow-2xl bg-cream">
